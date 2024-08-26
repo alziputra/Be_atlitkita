@@ -4,7 +4,8 @@ const router = express.Router();
 const routes = {
     users: require('./userRoutes'),
     competitions: require('./competitionRoutes'),
-    athletes: require('./athleteRoutes')
+    athletes: require('./athleteRoutes'),
+    results: require('./resultRoutes')
 };
 
 // Menggunakan loop untuk mendaftarkan rute secara dinamis
