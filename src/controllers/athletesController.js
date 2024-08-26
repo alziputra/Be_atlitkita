@@ -1,9 +1,10 @@
-const athleteModel = require('../models/athleteModel');
+// import athlete model
+const AthleteModel = require('../models/athleteModel');
 
-// Get all athletes
+// get all athletes
 exports.getAllAthletes = async (req, res) => {
   try {
-    const athletes = await athleteModel.getAllAthletes();
+    const [athletes] = await AthleteModel.getAllAthletes();
     res.json(athletes);
   } catch (err) {
     console.error(err.message);
@@ -11,11 +12,10 @@ exports.getAllAthletes = async (req, res) => {
   }
 };
 
-// Get athlete by ID
+// get athlete by id
 exports.getAthleteById = async (req, res) => {
   try {
-    const athleteId = req.params.id;
-    const athlete = await athleteModel.getAthleteById(athleteId);
+    const [athlete] = await AthleteModel.getAthleteById(req.params.id);
     if (athlete.length === 0) {
       return res.status(404).json({ message: 'Athlete not found' });
     }
@@ -26,38 +26,24 @@ exports.getAthleteById = async (req, res) => {
   }
 };
 
-// Create new athlete
+// create athlete
 exports.createAthlete = async (req, res) => {
   try {
-    const { athlete_name, athlete_dob, athlete_country } = req.body;
-    if (!athlete_name || !athlete_dob || !athlete_country) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Create new athlete
-    const result = await athleteModel.createAthlete({ athlete_name, athlete_dob, athlete_country });
-    res.status(201).json({ message: 'Athlete created successfully', id: result.insertId });
+    const result = await AthleteModel.createAthlete(req.body);
+    res.status(201).json({ id: result.insertId, message: 'Athlete created successfully' });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Database query error' });
   }
 };
 
-// Update athlete
+// update athlete
 exports.updateAthlete = async (req, res) => {
   try {
-    const athleteId = req.params.id;
-    const { athlete_name, athlete_dob, athlete_country } = req.body;
-    if (!athlete_name || !athlete_dob || !athlete_country) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const result = await athleteModel.updateAthlete(athleteId, { athlete_name, athlete_dob, athlete_country });
-
+    const result = await AthleteModel.updateAthlete(req.params.id, req.body);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Athlete not found' });
     }
-
     res.json({ message: 'Athlete updated successfully' });
   } catch (err) {
     console.error(err.message);
@@ -65,16 +51,13 @@ exports.updateAthlete = async (req, res) => {
   }
 };
 
-// Delete athlete
+// delete athlete
 exports.deleteAthlete = async (req, res) => {
   try {
-    const athleteId = req.params.id;
-    const result = await athleteModel.deleteAthlete(athleteId);
-
+    const result = await AthleteModel.deleteAthlete(req.params.id);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Athlete not found' });
     }
-
     res.json({ message: 'Athlete deleted successfully' });
   } catch (err) {
     console.error(err.message);

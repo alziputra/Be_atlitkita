@@ -1,3 +1,4 @@
+// import competition model
 const CompetitionModel = require('../models/competitionModel');
 
 // Get all competitions

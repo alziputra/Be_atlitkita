@@ -1,17 +1,15 @@
-const express = require('express');
+const express = require("express");
+const cors = require("cors");
 const app = express();
-const userRoutes = require('./routes/userRoutes');
-const competitionRoutes = require('./routes/competitionRoutes');
-const athleteRoutes = require('./routes/athleteRoutes');
 
-
+app.use(cors());
 app.use(express.json());
 
-app.use('/api/users', userRoutes);
-app.use('/api/competitions', competitionRoutes);
-app.use('/api/athletes', athleteRoutes);
+const router = require("./routes");
+
+app.use("/api", router);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

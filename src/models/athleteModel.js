@@ -1,4 +1,5 @@
-const db = require('../config/db');
+//
+const db = require("../config/db");
 
 exports.getAllAthletes = () => {
   return db.promise().query("SELECT * FROM tb_athletes");
@@ -9,19 +10,13 @@ exports.getAthleteById = (athleteId) => {
 };
 
 exports.createAthlete = (athleteData) => {
-  const { athlete_name, athlete_dob, athlete_country } = athleteData;
-  return db.promise().query(
-    "INSERT INTO tb_athletes (athlete_name, athlete_dob, athlete_country) VALUES (?, ?, ?)",
-    [athlete_name, athlete_dob, athlete_country]
-  );
+  const { name, team, weight, height } = athleteData;
+  return db.promise().query("INSERT INTO tb_athletes (name, team, weight, height) VALUES (?, ?, ?, ?)", [name, team, weight, height]);
 };
 
 exports.updateAthlete = (athleteId, athleteData) => {
-  const { athlete_name, athlete_dob, athlete_country } = athleteData;
-  return db.promise().query(
-    "UPDATE tb_athletes SET athlete_name = ?, athlete_dob = ?, athlete_country = ? WHERE athlete_id = ?",
-    [athlete_name, athlete_dob, athlete_country, athleteId]
-  );
+  const { name, team, weight, height } = athleteData;
+  return db.promise().query("UPDATE tb_athletes SET name = ?, team = ?, weight = ?, height = ? WHERE athlete_id = ?", [name, team, weight, height, athleteId]);
 };
 
 exports.deleteAthlete = (athleteId) => {
