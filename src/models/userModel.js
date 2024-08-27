@@ -1,79 +1,63 @@
 const db = require("../config/db");
-// Import bcrypt from the bcrypt package
 const bcrypt = require("bcrypt");
 
-// Export the functions to be used in the controller
+const query = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.query(sql, params, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+};
+
 exports.getAllUsers = () => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM tb_users";
-    db.query(sql, [], (err, results) => {
-      if (err) return reject(err);
-      resolve(results);
-    });
-  });
+  const sql = "SELECT * FROM tb_users";
+  return query(sql, []);
 };
 
-// Get user by ID
 exports.getUserById = (userId) => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM tb_users WHERE user_id = ?";
-    db.query(sql, [userId], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+  const sql = "SELECT * FROM tb_users WHERE user_id = ?";
+  return query(sql, [userId]);
 };
 
-// Get user by username
 exports.getUserByUsername = (username) => {
-  return new Promise((resolve, reject) => {
-    const sql = "SELECT * FROM tb_users WHERE username = ?";
-    db.query(sql, [username], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+  const sql = "SELECT * FROM tb_users WHERE username = ?";
+  return query(sql, [username]);
 };
 
-// Create new user
 exports.createUser = async (userData) => {
-  const { username, password, role } = userData;
-
-  // Encrypt the password using bcrypt
+  const { name, email, username, password, role } = userData;
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  return new Promise((resolve, reject) => {
-    const sql = "INSERT INTO tb_users (username, password, role) VALUES (?, ?, ?)";
-    db.query(sql, [username, hashedPassword, role], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+  const existingUser = await this.getUserByUsername(username);
+  if (existingUser.length > 0) {
+    throw new Error("User already exists");
+  }
+
+  const sql = "INSERT INTO tb_users (name, email, username, password, role) VALUES (?, ?, ?, ?, ?)";
+  return query(sql, [name, email, username, hashedPassword, role]);
 };
 
-// Update user
 exports.updateUser = async (userId, userData) => {
-  const { username, password, role } = userData;
-
-  // Encrypt the password using bcrypt
+  const { name, email, username, password, role } = userData;
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  return new Promise((resolve, reject) => {
-    const sql = "UPDATE tb_users SET username = ?, password = ?, role = ? WHERE user_id = ?";
-    db.query(sql, [username, hashedPassword, role, userId], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+  const existingUser = await this.getUserById(userId);
+  if (existingUser.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const sql = "UPDATE tb_users SET name = ?, email = ?, username = ?, password = ?, role = ? WHERE user_id = ?";
+  return query(sql, [name, email, username, hashedPassword, role, userId]);
 };
 
-// Delete user
-exports.deleteUser = (userId) => {
-  return new Promise((resolve, reject) => {
-    const sql = "DELETE FROM tb_users WHERE user_id = ?";
-    db.query(sql, [userId], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+exports.deleteUser = async (userId) => {
+  // First, check if the user exists
+  const user = await this.getUserById(userId);
+  if (user.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const sql = "DELETE FROM tb_users WHERE user_id = ?";
+  return query(sql, [userId]);
 };

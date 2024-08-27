@@ -1,95 +1,68 @@
-// import user model
-const UserModel = require('../models/userModel');
+const UserModel = require("../models/userModel");
 
-// Get all users
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await UserModel.getAllUsers();
-    res.json(users);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
+const handleSuccessResponse = (res, data, message) => {
+  if (message) {
+    res.json({ message, data });
+  } else {
+    res.json(data);
   }
 };
 
-// Get user by ID
-exports.getUserById = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const user = await UserModel.getUserById(userId);
-    if (user.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
-  }
+const handleErrorResponse = (res, statusCode, errorMessage, details) => {
+  res.status(statusCode).json({ error: errorMessage, details });
 };
 
-// Create new user
-exports.createUser = async (req, res) => {
-  try {
-    const { username, password, role } = req.body;
-    if (!username || !password || !role) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Check if user already exists
-    const existingUser = await UserModel.getUserByUsername(username);
-    if (existingUser.length > 0) {
-      return res.status(409).json({ message: 'Data sudah ada' });
-    }
-
-    // Create new user
-    const result = await UserModel.createUser({ username, password, role });
-    res.status(201).json({ message: 'Data berhasil ditambah', id: result.insertId });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
-  }
+exports.getAllUsers = (req, res) => {
+  UserModel.getAllUsers()
+    .then((users) => handleSuccessResponse(res, users))
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error", err.message));
 };
 
-// Update user
-exports.updateUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const { username, password, role } = req.body;
-    if (!username || !password || !role) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // Check if user exists
-    const existingUser = await UserModel.getUserById(userId);
-    if (existingUser.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Update user
-    await UserModel.updateUser(userId, { username, password, role });
-    res.json({ message: 'Data berhasil diupdate' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
-  }
+exports.getUserById = (req, res) => {
+  const userId = req.params.id;
+  UserModel.getUserById(userId)
+    .then((user) => {
+      if (user.length === 0) {
+        return handleErrorResponse(res, 404, "User not found");
+      }
+      handleSuccessResponse(res, user[0]);
+    })
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error", err.message));
 };
 
-// Delete user
-exports.deleteUser = async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    // Check if user exists
-    const existingUser = await UserModel.getUserById(userId);
-    if (existingUser.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Delete user
-    await UserModel.deleteUser(userId);
-    res.json({ message: 'Data berhasil dihapus' });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
+exports.createUser = (req, res) => {
+  const { name, email, username, password, role } = req.body;
+  if (!name || !email || !username || !password || !role) {
+    return handleErrorResponse(res, 400, "Missing required fields");
   }
+
+  UserModel.createUser({ name, email, username, password, role })
+    .then((result) => handleSuccessResponse(res, { id: result.insertId }, "User created successfully"))
+    .catch((err) => handleErrorResponse(res, 409, "User already exists", err.message));
+};
+
+exports.updateUser = (req, res) => {
+  const userId = req.params.id;
+  const { name, email, username, password, role } = req.body;
+  if (!name || !email || !username || !password || !role) {
+    return handleErrorResponse(res, 400, "Missing required fields");
+  }
+
+  UserModel.updateUser(userId, { name, email, username, password, role })
+    .then(() => handleSuccessResponse(res, null, "User updated successfully"))
+    .catch((err) => handleErrorResponse(res, 404, "User not found", err.message));
+};
+
+exports.deleteUser = (req, res) => {
+  const userId = req.params.id;
+
+  UserModel.deleteUser(userId)
+    .then(() => handleSuccessResponse(res, null, "User deleted successfully"))
+    .catch((err) => {
+      if (err.message === "User not found") {
+        handleErrorResponse(res, 404, "User not found");
+      } else {
+        handleErrorResponse(res, 500, "Internal server error", err.message);
+      }
+    });
 };
