@@ -26,9 +26,17 @@ exports.getAthleteById = async (req, res) => {
   }
 };
 
-// create athlete
+// create new athlete
 exports.createAthlete = async (req, res) => {
   try {
+    const { name } = req.body;
+
+    // Cek apakah atlet dengan nama yang sama sudah ada
+    const [existingAthleteByName] = await AthleteModel.getAthleteByName(name);
+    if (existingAthleteByName.length > 0) {
+      return res.status(400).json({ message: 'Data already exists' });
+    }
+
     const result = await AthleteModel.createAthlete(req.body);
     res.status(201).json({ id: result.insertId, message: 'Athlete created successfully' });
   } catch (err) {
@@ -40,6 +48,14 @@ exports.createAthlete = async (req, res) => {
 // update athlete
 exports.updateAthlete = async (req, res) => {
   try {
+    const { name } = req.body;
+
+    // Cek apakah atlet dengan nama yang sama sudah ada, dan pastikan itu bukan atlet yang sedang diperbarui
+    const [existingAthleteByName] = await AthleteModel.getAthleteByName(name);
+    if (existingAthleteByName.length > 0 && existingAthleteByName[0].athlete_id !== parseInt(req.params.id, 10)) {
+      return res.status(400).json({ message: 'Data already exists' });
+    }
+
     const result = await AthleteModel.updateAthlete(req.params.id, req.body);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Athlete not found' });

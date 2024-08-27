@@ -1,13 +1,16 @@
 const db = require('../config/db');
 
+// Get all competitions
 exports.getAllCompetitions = () => {
   return db.promise().query("SELECT * FROM tb_competitions");
 };
 
+// Get competition by ID
 exports.getCompetitionById = (competitionId) => {
   return db.promise().query("SELECT * FROM tb_competitions WHERE competition_id = ?", [competitionId]);
 };
 
+// Create new competition
 exports.createCompetition = (competitionData) => {
   const { competition_name, competition_date, status } = competitionData;
   return db.promise().query(
@@ -16,6 +19,7 @@ exports.createCompetition = (competitionData) => {
   );
 };
 
+// Update competition
 exports.updateCompetition = (competitionId, competitionData) => {
   const { competition_name, competition_date, status } = competitionData;
   return db.promise().query(
@@ -24,6 +28,7 @@ exports.updateCompetition = (competitionId, competitionData) => {
   );
 };
 
+// Delete competition
 exports.deleteCompetition = (competitionId) => {
   return db.promise().query("DELETE FROM tb_competitions WHERE competition_id = ?", [competitionId]);
 };
