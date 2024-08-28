@@ -10,6 +10,25 @@ const query = (sql, params) => {
   });
 };
 
+exports.getUserByUsername = (username) => {
+  const sql = "SELECT * FROM tb_users WHERE username = ?";
+  return query(sql, [username]);
+};
+
+exports.loginUser = async (username, password) => {
+  const user = await this.getUserByUsername(username);
+  if (user.length === 0) {
+    throw new Error("User not found");
+  }
+
+  const validPassword = await bcrypt.compare(password, user[0].password);
+  if (!validPassword) {
+    throw new Error("Invalid password");
+  }
+
+  return user[0];
+};
+
 exports.getAllUsers = () => {
   const sql = "SELECT * FROM tb_users";
   return query(sql, []);

@@ -1,21 +1,44 @@
 const UserModel = require("../models/userModel");
+const generateToken = require("../utils/jwt");
 
-const handleSuccessResponse = (res, data, message) => {
+const handleSuccessResponse = (res, data = null, message = null) => {
   if (message) {
-    res.json({ message, data });
+    res.status(200).json({ message, data });
+  } else if (data) {
+    res.status(200).json(data);
   } else {
-    res.json(data);
+    res.sendStatus(204);
   }
 };
 
-const handleErrorResponse = (res, statusCode, errorMessage, details) => {
-  res.status(statusCode).json({ error: errorMessage, details });
+const handleErrorResponse = (res, statusCode, errorMessage) => {
+  res.status(statusCode).json({ error: errorMessage });
+};
+
+exports.loginUser = (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return handleErrorResponse(res, 400, "Username and password are required");
+  }
+
+  UserModel.loginUser(username, password)
+    .then((user) => {
+      const userData = {
+        id: user.user_id,
+        username: user.username,
+        role: user.role,
+      };
+      const token = generateToken(userData); // Membuat token JWT
+      handleSuccessResponse(res, { token, user: userData }, "Login successful"); // Mengirim token sebagai respons
+    })
+    .catch((err) => handleErrorResponse(res, 401, err.message));
 };
 
 exports.getAllUsers = (req, res) => {
   UserModel.getAllUsers()
     .then((users) => handleSuccessResponse(res, users))
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error", err.message));
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
 
 exports.getUserById = (req, res) => {
@@ -27,7 +50,7 @@ exports.getUserById = (req, res) => {
       }
       handleSuccessResponse(res, user[0]);
     })
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error", err.message));
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
 
 exports.createUser = (req, res) => {
@@ -38,7 +61,7 @@ exports.createUser = (req, res) => {
 
   UserModel.createUser({ name, email, username, password, role })
     .then((result) => handleSuccessResponse(res, { id: result.insertId }, "User created successfully"))
-    .catch((err) => handleErrorResponse(res, 409, "User already exists", err.message));
+    .catch((err) => handleErrorResponse(res, 409, "User already exists"));
 };
 
 exports.updateUser = (req, res) => {
@@ -49,20 +72,24 @@ exports.updateUser = (req, res) => {
   }
 
   UserModel.updateUser(userId, { name, email, username, password, role })
-    .then(() => handleSuccessResponse(res, null, "User updated successfully"))
-    .catch((err) => handleErrorResponse(res, 404, "User not found", err.message));
+    .then((result) => {
+      if (result.affectedRows === 0) {
+        return handleErrorResponse(res, 404, "User not found");
+      }
+      handleSuccessResponse(res, null, "User updated successfully");
+    })
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
 
 exports.deleteUser = (req, res) => {
   const userId = req.params.id;
 
   UserModel.deleteUser(userId)
-    .then(() => handleSuccessResponse(res, null, "User deleted successfully"))
-    .catch((err) => {
-      if (err.message === "User not found") {
-        handleErrorResponse(res, 404, "User not found");
-      } else {
-        handleErrorResponse(res, 500, "Internal server error", err.message);
+    .then((result) => {
+      if (result.affectedRows === 0) {
+        return handleErrorResponse(res, 404, "User not found");
       }
-    });
+      handleSuccessResponse(res, null, "User deleted successfully");
+    })
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
