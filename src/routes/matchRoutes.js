@@ -1,11 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const resultController = require('../controllers/matchController');
+const matchController = require("../controllers/matchController");
 
-router.get('/', resultController.getAllResults);
-router.get('/:id', resultController.getResultById);
-router.post('/', resultController.createResult);
-router.put('/:id', resultController.updateResult);
-router.delete('/:id', resultController.deleteResult);
+router.get("/", matchController.getAllMatches);
+router.get("/:id", matchController.getMatchById);
+router.post("/", matchController.createMatch);
+router.put("/:id", matchController.updateMatch);
+router.delete("/:id", matchController.deleteMatch);
 
 module.exports = router;
