@@ -1,5 +1,3 @@
-// utils/responseHandler.js
-
 /**
  * Fungsi untuk menangani response sukses
  * @param {Object} res - Response object

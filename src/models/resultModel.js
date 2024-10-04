@@ -9,119 +9,72 @@ const query = (sql, params) => {
   });
 };
 
-// Mendapatkan semua hasil pertandingan
-exports.getAllResults = async () => {
-  try {
-    const sql = `
-      SELECT r.*, 
-             m.competition_id, 
-             a1.name AS athlete1_name, 
-             a2.name AS athlete2_name, 
-             winner.name AS winner_name, 
-             c.competition_name 
-      FROM tb_results AS r
-      JOIN tb_matches AS m ON r.match_id = m.match_id
-      JOIN tb_competitions AS c ON m.competition_id = c.competition_id
-      JOIN tb_athletes AS a1 ON m.athlete1_id = a1.athlete_id
-      JOIN tb_athletes AS a2 ON m.athlete2_id = a2.athlete_id
-      LEFT JOIN tb_athletes AS winner ON r.winner_id = winner.athlete_id
-      ORDER BY r.created_at DESC
-    `;
-    const result = await query(sql, []);
-    return result;
-  } catch (err) {
-    throw new Error("Gagal mendapatkan semua data hasil pertandingan.");
-  }
+// Mendapatkan hasil akhir pertandingan berdasarkan ID pertandingan
+exports.getResultsByMatchId = async (matchId) => {
+  const sql = `
+    SELECT r.*, a1.name AS athlete1_name, a2.name AS athlete2_name, a3.name AS winner_name 
+    FROM tb_results r
+    JOIN tb_matches m ON r.match_id = m.match_id
+    JOIN tb_athletes a1 ON m.athlete1_id = a1.athlete_id
+    JOIN tb_athletes a2 ON m.athlete2_id = a2.athlete_id
+    LEFT JOIN tb_athletes a3 ON r.winner_id = a3.athlete_id
+    WHERE r.match_id = ?
+  `;
+  return await query(sql, [matchId]);
 };
 
-// Mendapatkan hasil berdasarkan ID pertandingan
-exports.getResultByMatchId = async (matchId) => {
+// Membuat hasil baru berdasarkan skor dari tb_scores
+exports.createResult = async (matchId) => {
   try {
+    // Mengambil skor dari tb_scores untuk kedua atlet dalam satu pertandingan
     const sql = `
-      SELECT r.*, 
-             a1.name AS athlete1_name, 
-             a2.name AS athlete2_name, 
-             winner.name AS winner_name 
-      FROM tb_results AS r
-      JOIN tb_matches AS m ON r.match_id = m.match_id
-      JOIN tb_athletes AS a1 ON m.athlete1_id = a1.athlete_id
-      JOIN tb_athletes AS a2 ON m.athlete2_id = a2.athlete_id
-      LEFT JOIN tb_athletes AS winner ON r.winner_id = winner.athlete_id
-      WHERE r.match_id = ?
+      SELECT athlete_id, SUM(kick_score + punch_score + elbow_score + knee_score + throw_score) AS total_score
+      FROM tb_scores 
+      WHERE match_id = ? 
+      GROUP BY athlete_id
     `;
-    const result = await query(sql, [matchId]);
-    return result;
-  } catch (err) {
-    throw new Error("Gagal mendapatkan hasil pertandingan berdasarkan ID.");
-  }
-};
+    const scores = await query(sql, [matchId]);
 
-// Mendapatkan hasil final berdasrkan competition ID
-exports.getFinalResultsByCompetitionId = async (competitionId) => {
-  try {
-    const sql = `
-      SELECT * 
-      FROM view_final_results 
-      WHERE competition_id = ?
-    `;
-    return await query(sql, [competitionId]);
-  } catch (err) {
-    throw new Error("Gagal mendapatkan hasil akhir untuk kompetisi.");
-  }
-};
+    if (scores.length !== 2) {
+      throw new Error("Skor untuk kedua atlet belum lengkap.");
+    }
 
-// Mendapatkan skor oleh juri berdasarkan match ID
-exports.getJudgeScoresByMatchId = async (matchId) => {
-  try {
-    const sql = `
-      SELECT * 
-      FROM view_judge_scores 
-      WHERE match_id = ?
-    `;
-    return await query(sql, [matchId]);
-  } catch (err) {
-    throw new Error("Gagal mendapatkan skor juri untuk pertandingan.");
-  }
-};
+    // Mendapatkan skor untuk kedua atlet
+    const athlete1_final_score = scores[0].total_score;
+    const athlete2_final_score = scores[1].total_score;
 
-// Membuat hasil pertandingan baru
-exports.createResult = async (resultData) => {
-  try {
-    const { match_id, athlete1_final_score, athlete2_final_score, winner_id } = resultData;
-    const sql = `
-      INSERT INTO tb_results (match_id, athlete1_final_score, athlete2_final_score, winner_id) 
+    // Menentukan pemenang berdasarkan skor tertinggi
+    let winner_id = null;
+    if (athlete1_final_score > athlete2_final_score) {
+      winner_id = scores[0].athlete_id;
+    } else if (athlete2_final_score > athlete1_final_score) {
+      winner_id = scores[1].athlete_id;
+    }
+
+    // Menyimpan hasil ke tb_results
+    const insertSql = `
+      INSERT INTO tb_results (match_id, athlete1_final_score, athlete2_final_score, winner_id)
       VALUES (?, ?, ?, ?)
     `;
-    const result = await query(sql, [match_id, athlete1_final_score, athlete2_final_score, winner_id]);
-    return result;
+    return await query(insertSql, [matchId, athlete1_final_score, athlete2_final_score, winner_id]);
   } catch (err) {
-    throw new Error("Gagal membuat hasil pertandingan baru.");
+    throw new Error("Gagal membuat hasil pertandingan.");
   }
 };
 
-// Memperbarui hasil pertandingan
+// Memperbarui hasil pertandingan berdasarkan ID pertandingan
 exports.updateResult = async (resultId, resultData) => {
-  try {
-    const { athlete1_final_score, athlete2_final_score, winner_id } = resultData;
-    const sql = `
-      UPDATE tb_results 
-      SET athlete1_final_score = ?, athlete2_final_score = ?, winner_id = ? 
-      WHERE result_id = ?
-    `;
-    const result = await query(sql, [athlete1_final_score, athlete2_final_score, winner_id, resultId]);
-    return result;
-  } catch (err) {
-    throw new Error("Gagal memperbarui hasil pertandingan.");
-  }
+  const { athlete1_final_score, athlete2_final_score, winner_id } = resultData;
+  const sql = `
+    UPDATE tb_results 
+    SET athlete1_final_score = ?, athlete2_final_score = ?, winner_id = ? 
+    WHERE result_id = ?
+  `;
+  return await query(sql, [athlete1_final_score, athlete2_final_score, winner_id, resultId]);
 };
 
-// Menghapus hasil pertandingan berdasarkan ID
+// Menghapus hasil pertandingan berdasarkan ID hasil
 exports.deleteResult = async (resultId) => {
-  try {
-    const sql = `DELETE FROM tb_results WHERE result_id = ?`;
-    const result = await query(sql, [resultId]);
-    return result;
-  } catch (err) {
-    throw new Error("Gagal menghapus hasil pertandingan.");
-  }
+  const sql = `DELETE FROM tb_results WHERE result_id = ?`;
+  return await query(sql, [resultId]);
 };

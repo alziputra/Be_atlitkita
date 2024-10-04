@@ -10,7 +10,4 @@ router.post("/", matchController.createMatch);
 router.put("/:id", matchController.updateMatch);
 router.delete("/:id", matchController.deleteMatch);
 
-// Route untuk mendapatkan skor juri berdasarkan ID pertandingan
-router.get("/:id/judge-scores", resultController.getJudgeScores);
-
 module.exports = router;
