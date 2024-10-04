@@ -1,5 +1,4 @@
 const UserModel = require("../models/userModel");
-const generateToken = require("../utils/jwt");
 
 const handleSuccessResponse = (res, data = null, message = null) => {
   if (message) {
@@ -15,32 +14,14 @@ const handleErrorResponse = (res, statusCode, errorMessage) => {
   res.status(statusCode).json({ error: errorMessage });
 };
 
-exports.loginUser = (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return handleErrorResponse(res, 400, "Username and password are required");
-  }
-
-  UserModel.loginUser(username, password)
-    .then((user) => {
-      const userData = {
-        id: user.user_id,
-        username: user.username,
-        role: user.role,
-      };
-      const token = generateToken(userData); // Membuat token JWT
-      handleSuccessResponse(res, { token, user: userData }, "Login successful"); // Mengirim token sebagai respons
-    })
-    .catch((err) => handleErrorResponse(res, 401, err.message));
-};
-
+// Mendapatkan semua user
 exports.getAllUsers = (req, res) => {
   UserModel.getAllUsers()
     .then((users) => handleSuccessResponse(res, users))
     .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
 
+// Mendapatkan user berdasarkan ID
 exports.getUserById = (req, res) => {
   const userId = req.params.id;
   UserModel.getUserById(userId)
@@ -53,6 +34,21 @@ exports.getUserById = (req, res) => {
     .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
 
+// Mendapatkan user saat ini (untuk endpoint /me)
+exports.getCurrentUser = (req, res) => {
+  const userId = req.user.id; // userId diambil dari JWT yang sudah diverifikasi oleh middleware
+
+  UserModel.getUserById(userId)
+    .then((user) => {
+      if (user.length === 0) {
+        return handleErrorResponse(res, 404, "User not found");
+      }
+      handleSuccessResponse(res, user[0]);
+    })
+    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
+};
+
+// Membuat user baru
 exports.createUser = (req, res) => {
   const { name, email, username, password, role } = req.body;
   if (!name || !email || !username || !password || !role) {
@@ -64,6 +60,7 @@ exports.createUser = (req, res) => {
     .catch((err) => handleErrorResponse(res, 409, "User already exists"));
 };
 
+// Mengupdate user
 exports.updateUser = (req, res) => {
   const userId = req.params.id;
   const { name, email, username, password, role } = req.body;
@@ -81,6 +78,7 @@ exports.updateUser = (req, res) => {
     .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
 };
 
+// Menghapus user
 exports.deleteUser = (req, res) => {
   const userId = req.params.id;
 
