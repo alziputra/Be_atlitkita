@@ -7,29 +7,25 @@ const { handleErrorResponse, handleSuccessResponse } = require("../utils/respons
 exports.getAllResults = async (req, res) => {
   try {
     const results = await ResultModel.getAllResults();
-    if (results.length > 0) {
-      handleSuccessResponse(res, results, "Data hasil berhasil diambil.");
-    } else {
-      handleSuccessResponse(res, [], "Tidak ada hasil yang ditemukan.");
-    }
+    handleSuccessResponse(res, results, "Data hasil pertandingan berhasil diambil.");
   } catch (err) {
-    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil.");
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil pertandingan.");
   }
 };
 
 /**
- * Get result by ID
+ * Get result by match ID
  */
-exports.getResultById = async (req, res) => {
-  const resultId = req.params.id;
+exports.getResultByMatchId = async (req, res) => {
+  const matchId = req.params.id;
   try {
-    const result = await ResultModel.getResultById(resultId);
+    const result = await ResultModel.getResultByMatchId(matchId);
     if (result.length === 0) {
-      return handleErrorResponse(res, 404, "Hasil tidak ditemukan.");
+      return handleErrorResponse(res, 404, "Hasil pertandingan tidak ditemukan.");
     }
-    handleSuccessResponse(res, result[0], "Data hasil berhasil diambil.");
+    handleSuccessResponse(res, result[0], "Data hasil pertandingan berhasil diambil.");
   } catch (err) {
-    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil.");
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil pertandingan.");
   }
 };
 
@@ -37,25 +33,18 @@ exports.getResultById = async (req, res) => {
  * Create new result
  */
 exports.createResult = async (req, res) => {
-  const { athlete_id, score, competition_id } = req.body;
+  const { match_id, athlete1_final_score, athlete2_final_score, winner_id } = req.body;
 
-  if (!athlete_id || !score || !competition_id) {
+  // Validasi input
+  if (!match_id || athlete1_final_score === undefined || athlete2_final_score === undefined || !winner_id) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
   try {
-    const result = await ResultModel.createResult(req.body);
-    const newResultData = {
-      id: result.insertId,
-      athlete_id,
-      score,
-      competition_id,
-      created_at: new Date().toISOString(),
-    };
-
-    handleSuccessResponse(res, newResultData, "Hasil berhasil ditambahkan.");
+    const newResult = await ResultModel.createResult({ match_id, athlete1_final_score, athlete2_final_score, winner_id });
+    handleSuccessResponse(res, newResult, "Hasil pertandingan berhasil ditambahkan.");
   } catch (err) {
-    handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan hasil.");
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan hasil pertandingan.");
   }
 };
 
@@ -64,21 +53,34 @@ exports.createResult = async (req, res) => {
  */
 exports.updateResult = async (req, res) => {
   const resultId = req.params.id;
-  const { athlete_id, score, competition_id } = req.body;
+  const { athlete1_final_score, athlete2_final_score, winner_id } = req.body;
 
-  if (!athlete_id || !score || !competition_id) {
+  // Validasi input
+  if (athlete1_final_score === undefined || athlete2_final_score === undefined || !winner_id) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
   try {
-    const result = await ResultModel.updateResult(resultId, req.body);
-    if (result.affectedRows === 0) {
-      return handleErrorResponse(res, 404, "Hasil tidak ditemukan.");
+    const result = await ResultModel.getResultById(resultId);
+    if (result.length === 0) {
+      return handleErrorResponse(res, 404, "Hasil pertandingan tidak ditemukan.");
     }
 
-    handleSuccessResponse(res, null, "Hasil berhasil diperbarui.");
+    await ResultModel.updateResult(resultId, { athlete1_final_score, athlete2_final_score, winner_id });
+
+    handleSuccessResponse(
+      res,
+      {
+        id: resultId,
+        athlete1_final_score,
+        athlete2_final_score,
+        winner_id,
+        updated_at: new Date().toISOString(),
+      },
+      "Hasil pertandingan berhasil diperbarui."
+    );
   } catch (err) {
-    handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui hasil.");
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui hasil pertandingan.");
   }
 };
 
@@ -91,11 +93,10 @@ exports.deleteResult = async (req, res) => {
   try {
     const result = await ResultModel.deleteResult(resultId);
     if (result.affectedRows === 0) {
-      return handleErrorResponse(res, 404, "Hasil tidak ditemukan.");
+      return handleErrorResponse(res, 404, "Hasil pertandingan tidak ditemukan.");
     }
-
-    handleSuccessResponse(res, null, "Hasil berhasil dihapus.");
+    handleSuccessResponse(res, null, "Hasil pertandingan berhasil dihapus.");
   } catch (err) {
-    handleErrorResponse(res, 500, "Terjadi kesalahan saat menghapus hasil.");
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menghapus hasil pertandingan.");
   }
 };

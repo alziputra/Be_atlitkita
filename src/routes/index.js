@@ -6,7 +6,8 @@ const routes = {
     competitions: require('./competitionRoutes'),
     athletes: require('./athleteRoutes'),
     results: require('./resultRoutes'),
-    scores: require('./scoreRoutes')
+    scores: require('./scoreRoutes'),
+    matches: require('./matchRoutes'),
 };
 
 // Menggunakan loop untuk mendaftarkan rute secara dinamis

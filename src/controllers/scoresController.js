@@ -2,7 +2,7 @@ const ScoreModel = require("../models/scoreModel");
 const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
 /**
- * Get all scores with athlete and competition details
+ * Get all scores
  */
 exports.getAllScores = async (req, res) => {
   try {
@@ -14,29 +14,35 @@ exports.getAllScores = async (req, res) => {
 };
 
 /**
- * Get score by ID with athlete and competition details
+ * Get scores by match ID
  */
-exports.getScoreById = async (req, res) => {
-  const scoreId = req.params.id;
+exports.getScoresByMatchId = async (req, res) => {
+  const matchId = req.params.id;
   try {
-    const score = await ScoreModel.getScoreById(scoreId);
-    if (score.length === 0) {
+    const scores = await ScoreModel.getScoresByMatchId(matchId);
+    if (scores.length === 0) {
       return handleErrorResponse(res, 404, "Skor tidak ditemukan.");
     }
-    handleSuccessResponse(res, score[0], "Data skor berhasil diambil.");
+    handleSuccessResponse(res, scores, "Data skor berhasil diambil.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data skor.");
   }
 };
 
 /**
- * Create a new score
+ * Create new score
  */
 exports.createScore = async (req, res) => {
-  const scoreData = req.body;
+  const { match_id, judge_id, athlete1_score, athlete2_score } = req.body;
+
+  // Validasi input
+  if (!match_id || !judge_id || athlete1_score === undefined || athlete2_score === undefined) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
   try {
-    const result = await ScoreModel.createScore(scoreData);
-    handleSuccessResponse(res, result, "Skor berhasil ditambahkan.");
+    const newScore = await ScoreModel.createScore({ match_id, judge_id, athlete1_score, athlete2_score });
+    handleSuccessResponse(res, newScore, "Skor berhasil ditambahkan.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan skor.");
   }
@@ -47,13 +53,31 @@ exports.createScore = async (req, res) => {
  */
 exports.updateScore = async (req, res) => {
   const scoreId = req.params.id;
-  const scoreData = req.body;
+  const { athlete1_score, athlete2_score } = req.body;
+
+  // Validasi input
+  if (athlete1_score === undefined || athlete2_score === undefined) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
   try {
-    const result = await ScoreModel.updateScore(scoreId, scoreData);
-    if (result.affectedRows === 0) {
+    const score = await ScoreModel.getScoreById(scoreId);
+    if (score.length === 0) {
       return handleErrorResponse(res, 404, "Skor tidak ditemukan.");
     }
-    handleSuccessResponse(res, null, "Skor berhasil diperbarui.");
+
+    await ScoreModel.updateScore(scoreId, { athlete1_score, athlete2_score });
+
+    handleSuccessResponse(
+      res,
+      {
+        id: scoreId,
+        athlete1_score,
+        athlete2_score,
+        updated_at: new Date().toISOString(),
+      },
+      "Skor berhasil diperbarui."
+    );
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui skor.");
   }
@@ -64,6 +88,7 @@ exports.updateScore = async (req, res) => {
  */
 exports.deleteScore = async (req, res) => {
   const scoreId = req.params.id;
+
   try {
     const result = await ScoreModel.deleteScore(scoreId);
     if (result.affectedRows === 0) {

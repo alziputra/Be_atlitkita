@@ -1,6 +1,5 @@
 const db = require("../config/db");
 
-// Wrapper untuk query database menggunakan Promise
 const query = (sql, params) => {
   return new Promise((resolve, reject) => {
     db.query(sql, params, (err, result) => {
@@ -10,10 +9,10 @@ const query = (sql, params) => {
   });
 };
 
-// Mendapatkan semua data atlet
+// Mendapatkan semua atlet
 exports.getAllAthletes = async () => {
   try {
-    const sql = "SELECT * FROM tb_athletes";
+    const sql = `SELECT * FROM tb_athletes ORDER BY name ASC`;
     const result = await query(sql, []);
     return result;
   } catch (err) {
@@ -24,7 +23,7 @@ exports.getAllAthletes = async () => {
 // Mendapatkan atlet berdasarkan ID
 exports.getAthleteById = async (athleteId) => {
   try {
-    const sql = "SELECT * FROM tb_athletes WHERE athlete_id = ?";
+    const sql = `SELECT * FROM tb_athletes WHERE athlete_id = ?`;
     const result = await query(sql, [athleteId]);
     return result;
   } catch (err) {
@@ -32,53 +31,34 @@ exports.getAthleteById = async (athleteId) => {
   }
 };
 
-// Mendapatkan atlet berdasarkan nama
-exports.getAthleteByName = async (name) => {
-  try {
-    const sql = "SELECT * FROM tb_athletes WHERE name = ?";
-    const result = await query(sql, [name]);
-    return result;
-  } catch (err) {
-    throw new Error("Gagal mendapatkan data atlet berdasarkan nama.");
-  }
-};
-
 // Membuat atlet baru
 exports.createAthlete = async (athleteData) => {
   try {
     const { name, team, martial, weight, height } = athleteData;
-
-    // Pastikan data yang dibutuhkan sudah lengkap
-    if (!name || !team || !martial || !weight || !height) {
-      throw new Error("Field yang dibutuhkan tidak lengkap.");
-    }
-
-    // Memeriksa apakah atlet dengan nama yang sama sudah ada
-    const existingAthlete = await this.getAthleteByName(name);
-    if (existingAthlete.length > 0) {
-      throw new Error("Atlet dengan nama ini sudah ada.");
-    }
-
-    const sql = "INSERT INTO tb_athletes (name, team, martial, weight, height) VALUES (?, ?, ?, ?, ?)";
+    
+    const sql = `
+      INSERT INTO tb_athletes (name, team, martial, weight, height) 
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    
     const result = await query(sql, [name, team, martial, weight, height]);
     return result;
   } catch (err) {
-    throw new Error("Gagal membuat atlet baru.");
+    throw new Error("Gagal membuat data atlet baru.");
   }
 };
 
-// Memperbarui data atlet berdasarkan ID
+// Memperbarui data atlet
 exports.updateAthlete = async (athleteId, athleteData) => {
   try {
     const { name, team, martial, weight, height } = athleteData;
+    
+    const sql = `
+      UPDATE tb_athletes 
+      SET name = ?, team = ?, martial = ?, weight = ?, height = ? 
+      WHERE athlete_id = ?
+    `;
 
-    // Memeriksa apakah atlet ada
-    const existingAthlete = await this.getAthleteById(athleteId);
-    if (existingAthlete.length === 0) {
-      throw new Error("Atlet tidak ditemukan.");
-    }
-
-    const sql = "UPDATE tb_athletes SET name = ?, team = ?, martial = ?, weight = ?, height = ? WHERE athlete_id = ?";
     const result = await query(sql, [name, team, martial, weight, height, athleteId]);
     return result;
   } catch (err) {
@@ -89,13 +69,7 @@ exports.updateAthlete = async (athleteId, athleteData) => {
 // Menghapus atlet berdasarkan ID
 exports.deleteAthlete = async (athleteId) => {
   try {
-    // Memeriksa apakah atlet ada
-    const athlete = await this.getAthleteById(athleteId);
-    if (athlete.length === 0) {
-      throw new Error("Atlet tidak ditemukan.");
-    }
-
-    const sql = "DELETE FROM tb_athletes WHERE athlete_id = ?";
+    const sql = `DELETE FROM tb_athletes WHERE athlete_id = ?`;
     const result = await query(sql, [athleteId]);
     return result;
   } catch (err) {
