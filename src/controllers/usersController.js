@@ -1,93 +1,124 @@
 const UserModel = require("../models/userModel");
+const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
-const handleSuccessResponse = (res, data = null, message = null) => {
-  if (message) {
-    res.status(200).json({ message, data });
-  } else if (data) {
-    res.status(200).json(data);
-  } else {
-    res.sendStatus(204);
+/**
+ * Get all users
+ */
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await UserModel.getAllUsers();
+    if (users.length > 0) {
+      // Hapus password dari setiap user sebelum dikembalikan
+      const sanitizedUsers = users.map((user) => {
+        delete user.password;
+        return user;
+      });
+      handleSuccessResponse(res, sanitizedUsers, "Data pengguna berhasil diambil.");
+    } else {
+      handleSuccessResponse(res, [], "Tidak ada pengguna yang ditemukan.");
+    }
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
   }
 };
 
-const handleErrorResponse = (res, statusCode, errorMessage) => {
-  res.status(statusCode).json({ error: errorMessage });
-};
-
-// Mendapatkan semua user
-exports.getAllUsers = (req, res) => {
-  UserModel.getAllUsers()
-    .then((users) => handleSuccessResponse(res, users))
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
-};
-
-// Mendapatkan user berdasarkan ID
-exports.getUserById = (req, res) => {
+/**
+ * Get user by ID
+ */
+exports.getUserById = async (req, res) => {
   const userId = req.params.id;
-  UserModel.getUserById(userId)
-    .then((user) => {
-      if (user.length === 0) {
-        return handleErrorResponse(res, 404, "User not found");
-      }
-      handleSuccessResponse(res, user[0]);
-    })
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
+  try {
+    const user = await UserModel.getUserById(userId);
+    if (user.length === 0) {
+      return handleErrorResponse(res, 404, "User tidak ditemukan.");
+    }
+    // Hapus password sebelum dikembalikan
+    delete user[0].password;
+    handleSuccessResponse(res, user[0], "Data pengguna berhasil diambil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
+  }
 };
 
-// Mendapatkan user saat ini (untuk endpoint /me)
-exports.getCurrentUser = (req, res) => {
-  const userId = req.user.id; // userId diambil dari JWT yang sudah diverifikasi oleh middleware
+/**
+ * Create new user
+ */
+exports.createUser = async (req, res) => {
+  const { name, email, username, password, role_id } = req.body; // Menggunakan role_id
 
-  UserModel.getUserById(userId)
-    .then((user) => {
-      if (user.length === 0) {
-        return handleErrorResponse(res, 404, "User not found");
-      }
-      handleSuccessResponse(res, user[0]);
-    })
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
-};
-
-// Membuat user baru
-exports.createUser = (req, res) => {
-  const { name, email, username, password, role } = req.body;
-  if (!name || !email || !username || !password || !role) {
-    return handleErrorResponse(res, 400, "Missing required fields");
+  // Validasi input
+  if (!name || !email || !username || !password || !role_id) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
-  UserModel.createUser({ name, email, username, password, role })
-    .then((result) => handleSuccessResponse(res, { id: result.insertId }, "User created successfully"))
-    .catch((err) => handleErrorResponse(res, 409, "User already exists"));
+  try {
+    // Pastikan user belum ada
+    const existingUser = await UserModel.getUserByUsername(username);
+    if (existingUser.length > 0) {
+      return handleErrorResponse(res, 409, "Username sudah digunakan.");
+    }
+
+    const newUser = await UserModel.createUser({ name, email, username, password, role_id });
+
+    // Hindari mengembalikan password dalam response
+    const { user_id, created_at } = newUser;
+
+    handleSuccessResponse(res, { user_id, name, email, username, role_id, created_at }, "User berhasil ditambahkan.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan user.");
+  }
 };
 
-// Mengupdate user
-exports.updateUser = (req, res) => {
+/**
+ * Update user by ID
+ */
+exports.updateUser = async (req, res) => {
   const userId = req.params.id;
-  const { name, email, username, password, role } = req.body;
-  if (!name || !email || !username || !password || !role) {
-    return handleErrorResponse(res, 400, "Missing required fields");
+  const { name, email, username, password, role_id } = req.body; // Menggunakan role_id
+
+  // Validasi input
+  if (!name || !email || !username || !password || !role_id) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
-  UserModel.updateUser(userId, { name, email, username, password, role })
-    .then((result) => {
-      if (result.affectedRows === 0) {
-        return handleErrorResponse(res, 404, "User not found");
-      }
-      handleSuccessResponse(res, null, "User updated successfully");
-    })
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
+  try {
+    const user = await UserModel.getUserById(userId);
+    if (user.length === 0) {
+      return handleErrorResponse(res, 404, "User tidak ditemukan.");
+    }
+
+    await UserModel.updateUser(userId, { name, email, username, password, role_id });
+
+    handleSuccessResponse(
+      res,
+      {
+        id: userId,
+        name,
+        email,
+        username,
+        role_id,
+        updated_at: new Date().toISOString(),
+      },
+      "User berhasil diperbarui."
+    );
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui user.");
+  }
 };
 
-// Menghapus user
-exports.deleteUser = (req, res) => {
+/**
+ * Delete user by ID
+ */
+exports.deleteUser = async (req, res) => {
   const userId = req.params.id;
 
-  UserModel.deleteUser(userId)
-    .then((result) => {
-      if (result.affectedRows === 0) {
-        return handleErrorResponse(res, 404, "User not found");
-      }
-      handleSuccessResponse(res, null, "User deleted successfully");
-    })
-    .catch((err) => handleErrorResponse(res, 500, "Internal server error"));
+  try {
+    const result = await UserModel.deleteUser(userId);
+    if (result.affectedRows === 0) {
+      return handleErrorResponse(res, 404, "User tidak ditemukan.");
+    }
+    handleSuccessResponse(res, null, "User berhasil dihapus.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menghapus user.");
+  }
 };

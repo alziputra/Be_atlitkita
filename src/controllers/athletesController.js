@@ -1,82 +1,111 @@
-// import athlete model
-const AthleteModel = require('../models/athleteModel');
+const AthleteModel = require("../models/athleteModel");
+const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
-// get all athletes
+/**
+ * Get all athletes
+ */
 exports.getAllAthletes = async (req, res) => {
   try {
-    const [athletes] = await AthleteModel.getAllAthletes();
-    res.json(athletes);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
-  }
-};
-
-// get athlete by id
-exports.getAthleteById = async (req, res) => {
-  try {
-    const [athlete] = await AthleteModel.getAthleteById(req.params.id);
-    if (athlete.length === 0) {
-      return res.status(404).json({ message: 'Athlete not found' });
+    const athletes = await AthleteModel.getAllAthletes();
+    if (athletes.length > 0) {
+      handleSuccessResponse(res, athletes, "Data atlet berhasil diambil.");
+    } else {
+      handleSuccessResponse(res, [], "Tidak ada atlet yang ditemukan.");
     }
-    res.json(athlete);
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data atlet.");
   }
 };
 
-// create new athlete
-exports.createAthlete = async (req, res) => {
+/**
+ * Get athlete by ID
+ */
+exports.getAthleteById = async (req, res) => {
+  const athleteId = req.params.id;
   try {
-    const { name } = req.body;
+    const athlete = await AthleteModel.getAthleteById(athleteId);
+    if (athlete.length === 0) {
+      return handleErrorResponse(res, 404, "Atlet tidak ditemukan.");
+    }
+    handleSuccessResponse(res, athlete[0], "Data atlet berhasil diambil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data atlet.");
+  }
+};
 
+/**
+ * Create new athlete
+ */
+exports.createAthlete = async (req, res) => {
+  const { name } = req.body;
+
+  if (!name) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
+  try {
     // Cek apakah atlet dengan nama yang sama sudah ada
-    const [existingAthleteByName] = await AthleteModel.getAthleteByName(name);
+    const existingAthleteByName = await AthleteModel.getAthleteByName(name);
     if (existingAthleteByName.length > 0) {
-      return res.status(400).json({ message: 'Data already exists' });
+      return handleErrorResponse(res, 400, "Atlet dengan nama ini sudah ada.");
     }
 
     const result = await AthleteModel.createAthlete(req.body);
-    res.status(201).json({ id: result.insertId, message: 'Athlete created successfully' });
+    const newAthleteData = {
+      id: result.insertId,
+      name,
+      created_at: new Date().toISOString(),
+    };
+
+    handleSuccessResponse(res, newAthleteData, "Atlet berhasil ditambahkan.");
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan atlet.");
   }
 };
 
-// update athlete
+/**
+ * Update athlete by ID
+ */
 exports.updateAthlete = async (req, res) => {
+  const athleteId = req.params.id;
+  const { name } = req.body;
+
+  if (!name) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
   try {
-    const { name } = req.body;
-
-    // Cek apakah atlet dengan nama yang sama sudah ada, dan pastikan itu bukan atlet yang sedang diperbarui
-    const [existingAthleteByName] = await AthleteModel.getAthleteByName(name);
-    if (existingAthleteByName.length > 0 && existingAthleteByName[0].athlete_id !== parseInt(req.params.id, 10)) {
-      return res.status(400).json({ message: 'Data already exists' });
+    // Cek apakah atlet dengan nama yang sama sudah ada, dan pastikan bukan atlet yang sedang diperbarui
+    const existingAthleteByName = await AthleteModel.getAthleteByName(name);
+    if (existingAthleteByName.length > 0 && existingAthleteByName[0].athlete_id !== parseInt(athleteId, 10)) {
+      return handleErrorResponse(res, 400, "Atlet dengan nama ini sudah ada.");
     }
 
-    const result = await AthleteModel.updateAthlete(req.params.id, req.body);
+    const result = await AthleteModel.updateAthlete(athleteId, req.body);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Athlete not found' });
+      return handleErrorResponse(res, 404, "Atlet tidak ditemukan.");
     }
-    res.json({ message: 'Athlete updated successfully' });
+
+    handleSuccessResponse(res, null, "Atlet berhasil diperbarui.");
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui atlet.");
   }
 };
 
-// delete athlete
+/**
+ * Delete athlete by ID
+ */
 exports.deleteAthlete = async (req, res) => {
+  const athleteId = req.params.id;
+
   try {
-    const result = await AthleteModel.deleteAthlete(req.params.id);
+    const result = await AthleteModel.deleteAthlete(athleteId);
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Athlete not found' });
+      return handleErrorResponse(res, 404, "Atlet tidak ditemukan.");
     }
-    res.json({ message: 'Athlete deleted successfully' });
+
+    handleSuccessResponse(res, null, "Atlet berhasil dihapus.");
   } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ error: 'Database query error' });
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menghapus atlet.");
   }
 };

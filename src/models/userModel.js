@@ -1,6 +1,7 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
 
+// Wrapper untuk query database menggunakan Promise
 const query = (sql, params) => {
   return new Promise((resolve, reject) => {
     db.query(sql, params, (err, result) => {
@@ -10,59 +11,115 @@ const query = (sql, params) => {
   });
 };
 
-exports.getUserByUsername = (username) => {
-  const sql = "SELECT * FROM tb_users WHERE username = ?";
-  return query(sql, [username]);
+// Mendapatkan pengguna berdasarkan username
+exports.getUserByUsername = async (username) => {
+  try {
+    const sql = `
+      SELECT 
+        users.user_id, 
+        users.name, 
+        users.email, 
+        users.username, 
+        users.password, 
+        roles.role_name 
+      FROM tb_users AS users
+      JOIN tb_roles AS roles ON users.role_id = roles.role_id
+      WHERE users.username = ?
+    `;
+
+    const result = await query(sql, [username]);
+    return result;
+  } catch (err) {
+    throw new Error("Gagal mendapatkan pengguna berdasarkan username.");
+  }
 };
 
-exports.getAllUsers = () => {
-  const sql = "SELECT * FROM tb_users";
-  return query(sql, []);
+// Mendapatkan semua pengguna
+exports.getAllUsers = async () => {
+  try {
+    const sql = `
+      SELECT users.*, roles.role_name 
+      FROM tb_users AS users
+      JOIN tb_roles AS roles ON users.role_id = roles.role_id
+    `;
+
+    const result = await query(sql, []);
+    return result;
+  } catch (err) {
+    throw new Error("Gagal mendapatkan semua data pengguna.");
+  }
 };
 
-exports.getUserById = (userId) => {
-  const sql = "SELECT * FROM tb_users WHERE user_id = ?";
-  return query(sql, [userId]);
+// Mendapatkan pengguna berdasarkan ID
+exports.getUserById = async (userId) => {
+  try {
+    const sql = `
+      SELECT users.*, roles.role_name 
+      FROM tb_users AS users
+      JOIN tb_roles AS roles ON users.role_id = roles.role_id
+      WHERE users.user_id = ?
+    `;
+
+    const result = await query(sql, [userId]);
+    return result;
+  } catch (err) {
+    throw new Error("Gagal mendapatkan pengguna berdasarkan ID.");
+  }
 };
 
-exports.getUserByUsername = (username) => {
-  const sql = "SELECT * FROM tb_users WHERE username = ?";
-  return query(sql, [username]);
-};
-
+// Membuat pengguna baru
 exports.createUser = async (userData) => {
-  const { name, email, username, password, role } = userData;
-  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const { name, email, username, password, role_id } = userData; // role_id digunakan, bukan role
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const existingUser = await this.getUserByUsername(username);
-  if (existingUser.length > 0) {
-    throw new Error("User already exists");
+    // Periksa apakah username sudah ada
+    const existingUser = await this.getUserByUsername(username);
+    if (existingUser.length > 0) {
+      throw new Error("Pengguna sudah ada.");
+    }
+
+    const sql = "INSERT INTO tb_users (name, email, username, password, role_id) VALUES (?, ?, ?, ?, ?)";
+    const result = await query(sql, [name, email, username, hashedPassword, role_id]);
+    return result;
+  } catch (err) {
+    throw new Error("Gagal membuat pengguna baru.");
   }
-
-  const sql = "INSERT INTO tb_users (name, email, username, password, role) VALUES (?, ?, ?, ?, ?)";
-  return query(sql, [name, email, username, hashedPassword, role]);
 };
 
+// Memperbarui pengguna berdasarkan ID
 exports.updateUser = async (userId, userData) => {
-  const { name, email, username, password, role } = userData;
-  const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    const { name, email, username, password, role_id } = userData; // role_id digunakan, bukan role
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const existingUser = await this.getUserById(userId);
-  if (existingUser.length === 0) {
-    throw new Error("User not found");
+    // Periksa apakah pengguna ada berdasarkan ID
+    const existingUser = await this.getUserById(userId);
+    if (existingUser.length === 0) {
+      throw new Error("Pengguna tidak ditemukan.");
+    }
+
+    const sql = "UPDATE tb_users SET name = ?, email = ?, username = ?, password = ?, role_id = ? WHERE user_id = ?";
+    const result = await query(sql, [name, email, username, hashedPassword, role_id, userId]);
+    return result;
+  } catch (err) {
+    throw new Error("Gagal memperbarui data pengguna.");
   }
-
-  const sql = "UPDATE tb_users SET name = ?, email = ?, username = ?, password = ?, role = ? WHERE user_id = ?";
-  return query(sql, [name, email, username, hashedPassword, role, userId]);
 };
 
+// Menghapus pengguna berdasarkan ID
 exports.deleteUser = async (userId) => {
-  // First, check if the user exists
-  const user = await this.getUserById(userId);
-  if (user.length === 0) {
-    throw new Error("User not found");
-  }
+  try {
+    // Periksa apakah pengguna ada berdasarkan ID
+    const user = await this.getUserById(userId);
+    if (user.length === 0) {
+      throw new Error("Pengguna tidak ditemukan.");
+    }
 
-  const sql = "DELETE FROM tb_users WHERE user_id = ?";
-  return query(sql, [userId]);
+    const sql = "DELETE FROM tb_users WHERE user_id = ?";
+    const result = await query(sql, [userId]);
+    return result;
+  } catch (err) {
+    throw new Error("Gagal menghapus pengguna.");
+  }
 };

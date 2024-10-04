@@ -1,66 +1,101 @@
-// import result model
-const ResultModel = require('../models/resultModel');
+const ResultModel = require("../models/resultModel");
+const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
-// get all results
+/**
+ * Get all results
+ */
 exports.getAllResults = async (req, res) => {
-    try {
-        const results = await ResultModel.getAllResults();
-        res.json(results);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Database query error' });
+  try {
+    const results = await ResultModel.getAllResults();
+    if (results.length > 0) {
+      handleSuccessResponse(res, results, "Data hasil berhasil diambil.");
+    } else {
+      handleSuccessResponse(res, [], "Tidak ada hasil yang ditemukan.");
     }
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil.");
+  }
 };
 
-// get result by id
+/**
+ * Get result by ID
+ */
 exports.getResultById = async (req, res) => {
-    try {
-        const result = await ResultModel.getResultById(req.params.id);
-        if (result.length === 0) {
-            return res.status(404).json({ message: 'Result not found' });
-        }
-        res.json(result);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Database query error' });
+  const resultId = req.params.id;
+  try {
+    const result = await ResultModel.getResultById(resultId);
+    if (result.length === 0) {
+      return handleErrorResponse(res, 404, "Hasil tidak ditemukan.");
     }
+    handleSuccessResponse(res, result[0], "Data hasil berhasil diambil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil.");
+  }
 };
 
-// create result
+/**
+ * Create new result
+ */
 exports.createResult = async (req, res) => {
-    try {
-        const result = await ResultModel.createResult(req.body);
-        res.status(201).json({ id: result.insertId, message: 'Result created successfully' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Database query error' });
-    }
+  const { athlete_id, score, competition_id } = req.body;
+
+  if (!athlete_id || !score || !competition_id) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
+  try {
+    const result = await ResultModel.createResult(req.body);
+    const newResultData = {
+      id: result.insertId,
+      athlete_id,
+      score,
+      competition_id,
+      created_at: new Date().toISOString(),
+    };
+
+    handleSuccessResponse(res, newResultData, "Hasil berhasil ditambahkan.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan hasil.");
+  }
 };
 
-// update result
+/**
+ * Update result by ID
+ */
 exports.updateResult = async (req, res) => {
-    try {
-        const result = await ResultModel.updateResult(req.params.id, req.body);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Result not found' });
-        }
-        res.json({ message: 'Result updated successfully' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Database query error' });
+  const resultId = req.params.id;
+  const { athlete_id, score, competition_id } = req.body;
+
+  if (!athlete_id || !score || !competition_id) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
+  try {
+    const result = await ResultModel.updateResult(resultId, req.body);
+    if (result.affectedRows === 0) {
+      return handleErrorResponse(res, 404, "Hasil tidak ditemukan.");
     }
+
+    handleSuccessResponse(res, null, "Hasil berhasil diperbarui.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui hasil.");
+  }
 };
 
-// delete result
+/**
+ * Delete result by ID
+ */
 exports.deleteResult = async (req, res) => {
-    try {
-        const result = await ResultModel.deleteResult(req.params.id);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'Result not found' });
-        }
-        res.json({ message: 'Result deleted successfully' });
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ error: 'Database query error' });
+  const resultId = req.params.id;
+
+  try {
+    const result = await ResultModel.deleteResult(resultId);
+    if (result.affectedRows === 0) {
+      return handleErrorResponse(res, 404, "Hasil tidak ditemukan.");
     }
+
+    handleSuccessResponse(res, null, "Hasil berhasil dihapus.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat menghapus hasil.");
+  }
 };
