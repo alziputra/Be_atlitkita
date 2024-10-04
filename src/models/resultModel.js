@@ -56,6 +56,34 @@ exports.getResultByMatchId = async (matchId) => {
   }
 };
 
+// Mendapatkan hasil final berdasrkan competition ID
+exports.getFinalResultsByCompetitionId = async (competitionId) => {
+  try {
+    const sql = `
+      SELECT * 
+      FROM view_final_results 
+      WHERE competition_id = ?
+    `;
+    return await query(sql, [competitionId]);
+  } catch (err) {
+    throw new Error("Gagal mendapatkan hasil akhir untuk kompetisi.");
+  }
+};
+
+// Mendapatkan skor oleh juri berdasarkan match ID
+exports.getJudgeScoresByMatchId = async (matchId) => {
+  try {
+    const sql = `
+      SELECT * 
+      FROM view_judge_scores 
+      WHERE match_id = ?
+    `;
+    return await query(sql, [matchId]);
+  } catch (err) {
+    throw new Error("Gagal mendapatkan skor juri untuk pertandingan.");
+  }
+};
+
 // Membuat hasil pertandingan baru
 exports.createResult = async (resultData) => {
   try {

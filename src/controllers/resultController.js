@@ -30,6 +30,40 @@ exports.getResultByMatchId = async (req, res) => {
 };
 
 /**
+ * Get final results by competition ID
+ */
+exports.getFinalResults = async (req, res) => {
+  const competitionId = req.params.id;
+
+  try {
+    const finalResults = await ResultModel.getFinalResultsByCompetitionId(competitionId);
+    if (finalResults.length === 0) {
+      return handleErrorResponse(res, 404, "Tidak ada hasil akhir untuk kompetisi ini.");
+    }
+    handleSuccessResponse(res, finalResults, "Data hasil akhir kompetisi berhasil diambil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil hasil akhir kompetisi.");
+  }
+};
+
+/**
+ * Get judge scores by match ID
+ */
+exports.getJudgeScores = async (req, res) => {
+  const matchId = req.params.id;
+
+  try {
+    const judgeScores = await ResultModel.getJudgeScoresByMatchId(matchId);
+    if (judgeScores.length === 0) {
+      return handleErrorResponse(res, 404, "Tidak ada skor juri untuk pertandingan ini.");
+    }
+    handleSuccessResponse(res, judgeScores, "Data skor juri berhasil diambil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data skor juri.");
+  }
+};
+
+/**
  * Create new result
  */
 exports.createResult = async (req, res) => {
