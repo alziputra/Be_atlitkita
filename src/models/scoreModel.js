@@ -32,6 +32,23 @@ exports.getAllScores = async () => {
   }
 };
 
+// Mendapatkan skor berdasarkan ID
+exports.getScoreById = async (scoreId) => {
+  try {
+    const sql = `
+      SELECT s.*, m.match_id, u.name AS judge_name, a.name AS athlete_name
+      FROM tb_scores s
+      JOIN tb_matches m ON s.match_id = m.match_id
+      JOIN tb_users u ON s.judge_id = u.user_id
+      JOIN tb_athletes a ON s.athlete_id = a.athlete_id
+      WHERE s.score_id = ?
+    `;
+    return await query(sql, [scoreId]);
+  } catch (err) {
+    throw new Error("Gagal mendapatkan data skor berdasarkan ID.");
+  }
+};
+
 // Mendapatkan skor berdasarkan ID pertandingan
 exports.getScoresByMatchId = async (matchId) => {
   try {
@@ -57,30 +74,28 @@ exports.getScoresByMatchId = async (matchId) => {
 
 // Membuat skor baru
 exports.createScore = async (scoreData) => {
+  const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = scoreData;
   try {
-    const { match_id, judge_id, athlete1_score, athlete2_score } = scoreData;
     const sql = `
-      INSERT INTO tb_scores (match_id, judge_id, athlete1_score, athlete2_score) 
-      VALUES (?, ?, ?, ?)
+      INSERT INTO tb_scores (match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const result = await query(sql, [match_id, judge_id, athlete1_score, athlete2_score]);
-    return result;
+    return await query(sql, [match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score]);
   } catch (err) {
-    throw new Error("Gagal membuat skor baru.");
+    throw new Error("Gagal menambahkan skor.");
   }
 };
 
 // Memperbarui skor
 exports.updateScore = async (scoreId, scoreData) => {
+  const { kick_score, punch_score, elbow_score, knee_score, throw_score } = scoreData;
   try {
-    const { athlete1_score, athlete2_score } = scoreData;
     const sql = `
       UPDATE tb_scores 
-      SET athlete1_score = ?, athlete2_score = ? 
+      SET kick_score = ?, punch_score = ?, elbow_score = ?, knee_score = ?, throw_score = ? 
       WHERE score_id = ?
     `;
-    const result = await query(sql, [athlete1_score, athlete2_score, scoreId]);
-    return result;
+    return await query(sql, [kick_score, punch_score, elbow_score, knee_score, throw_score, scoreId]);
   } catch (err) {
     throw new Error("Gagal memperbarui skor.");
   }

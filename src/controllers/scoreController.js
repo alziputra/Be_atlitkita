@@ -33,16 +33,21 @@ exports.getScoresByMatchId = async (req, res) => {
  * Create new score
  */
 exports.createScore = async (req, res) => {
-  const { match_id, judge_id, athlete1_score, athlete2_score } = req.body;
+  const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = req.body;
 
   // Validasi input
-  if (!match_id || !judge_id || athlete1_score === undefined || athlete2_score === undefined) {
+  if (!match_id || !judge_id || !athlete_id) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
   try {
-    const newScore = await ScoreModel.createScore({ match_id, judge_id, athlete1_score, athlete2_score });
-    handleSuccessResponse(res, newScore, "Skor berhasil ditambahkan.");
+    // Menambahkan skor baru
+    const result = await ScoreModel.createScore({ match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score });
+
+    // Mengambil kembali data skor yang baru ditambahkan
+    const newScore = await ScoreModel.getScoreById(result.insertId);
+
+    handleSuccessResponse(res, newScore[0], "Skor berhasil ditambahkan.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan skor.");
   }
@@ -53,31 +58,16 @@ exports.createScore = async (req, res) => {
  */
 exports.updateScore = async (req, res) => {
   const scoreId = req.params.id;
-  const { athlete1_score, athlete2_score } = req.body;
+  const { kick_score, punch_score, elbow_score, knee_score, throw_score } = req.body;
 
   // Validasi input
-  if (athlete1_score === undefined || athlete2_score === undefined) {
+  if (!kick_score || !punch_score || !elbow_score || !knee_score || !throw_score) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
   try {
-    const score = await ScoreModel.getScoreById(scoreId);
-    if (score.length === 0) {
-      return handleErrorResponse(res, 404, "Skor tidak ditemukan.");
-    }
-
-    await ScoreModel.updateScore(scoreId, { athlete1_score, athlete2_score });
-
-    handleSuccessResponse(
-      res,
-      {
-        id: scoreId,
-        athlete1_score,
-        athlete2_score,
-        updated_at: new Date().toISOString(),
-      },
-      "Skor berhasil diperbarui."
-    );
+    await ScoreModel.updateScore(scoreId, { kick_score, punch_score, elbow_score, knee_score, throw_score });
+    handleSuccessResponse(res, null, "Skor berhasil diperbarui.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat memperbarui skor.");
   }

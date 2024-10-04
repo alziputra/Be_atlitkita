@@ -41,8 +41,13 @@ exports.createMatch = async (req, res) => {
   }
 
   try {
-    const newMatch = await MatchModel.createMatch({ competition_id, athlete1_id, athlete2_id });
-    handleSuccessResponse(res, newMatch, "Pertandingan berhasil ditambahkan.");
+    // Menambahkan pertandingan baru
+    const result = await MatchModel.createMatch({ competition_id, athlete1_id, athlete2_id });
+
+    // Mengambil kembali data pertandingan yang baru ditambahkan
+    const newMatch = await MatchModel.getMatchById(result.insertId);
+
+    handleSuccessResponse(res, newMatch[0], "Pertandingan berhasil ditambahkan.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan pertandingan.");
   }
