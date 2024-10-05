@@ -1,5 +1,39 @@
 const UserModel = require("../models/userModel");
+const bcrypt = require('bcrypt');
+const { generateAccessToken, generateRefreshToken } = require("../utils/authUtils");
 const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
+
+/**
+ * Login User
+ */
+exports.login = async (req, res) => {
+  const { usernameOrEmail, password } = req.body;
+
+  try {
+    const userResult = await UserModel.getUserByUsernameOrEmail(usernameOrEmail);
+    if (userResult.length === 0) {
+      return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
+    }
+
+    const user = userResult[0];
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(400).json({ message: 'Password salah.' });
+    }
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    res.status(200).json({
+      accessToken,
+      refreshToken,
+      message: 'Login berhasil',
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Terjadi kesalahan saat login.' });
+  }
+};
 
 /**
  * Get all users

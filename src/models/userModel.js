@@ -11,6 +11,12 @@ const query = (sql, params) => {
   });
 };
 
+// Mendapatkan pengguna berdasarkan username atau email
+exports.getUserByUsernameOrEmail = (usernameOrEmail) => {
+  const sql = `SELECT * FROM tb_users WHERE username = ? OR email = ?`;
+  return query(sql, [usernameOrEmail, usernameOrEmail]);
+};
+
 // Mendapatkan pengguna berdasarkan username
 exports.getUserByUsername = async (username) => {
   try {
