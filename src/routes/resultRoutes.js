@@ -3,6 +3,7 @@ const router = express.Router();
 const resultController = require("../controllers/resultController");
 
 // Route untuk hasil pertandingan
+router.get("/", resultController.getAllResults);
 router.get("/matches/:id", resultController.getResultsByMatchId);
 router.post("/", resultController.createResult);
 router.put("/:id", resultController.updateResult);

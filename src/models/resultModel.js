@@ -9,6 +9,20 @@ const query = (sql, params) => {
   });
 };
 
+// Mendapatkan semua hasil pertandingan
+exports.getAllResults = async () => {
+  const sql = `
+    SELECT r.*, a1.name AS athlete1_name, a2.name AS athlete2_name, a3.name AS winner_name, c.competition_name 
+    FROM tb_results r
+    JOIN tb_matches m ON r.match_id = m.match_id
+    JOIN tb_athletes a1 ON m.athlete1_id = a1.athlete_id
+    JOIN tb_athletes a2 ON m.athlete2_id = a2.athlete_id
+    LEFT JOIN tb_athletes a3 ON r.winner_id = a3.athlete_id
+    JOIN tb_competitions c ON m.competition_id = c.competition_id
+  `;
+  return await query(sql, []);
+};
+
 // Mendapatkan hasil akhir pertandingan berdasarkan ID pertandingan
 exports.getResultsByMatchId = async (matchId) => {
   const sql = `

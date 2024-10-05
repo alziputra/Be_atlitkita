@@ -2,6 +2,18 @@ const ResultModel = require("../models/resultModel");
 const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
 /**
+ * Get all results
+ */
+exports.getAllResults = async (req, res) => {
+  try {
+    const results = await ResultModel.getAllResults();
+    handleSuccessResponse(res, results, "Data hasil pertandingan berhasil diambil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data hasil pertandingan.");
+  }
+};
+
+/**
  * Get results by match ID
  */
 exports.getResultsByMatchId = async (req, res) => {
