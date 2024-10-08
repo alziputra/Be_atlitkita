@@ -30,7 +30,7 @@ exports.getUserByUsername = async (username) => {
     const result = await query(sql, [username]);
     return result;
   } catch (err) {
-    throw new Error("Gagal mendapatkan pengguna berdasarkan username.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
 
@@ -46,7 +46,7 @@ exports.getAllUsers = async () => {
     const result = await query(sql, []);
     return result;
   } catch (err) {
-    throw new Error("Gagal mendapatkan semua data pengguna.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
 
@@ -63,7 +63,7 @@ exports.getUserById = async (userId) => {
     const result = await query(sql, [userId]);
     return result;
   } catch (err) {
-    throw new Error("Gagal mendapatkan pengguna berdasarkan ID.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
 
@@ -76,7 +76,7 @@ exports.createUser = async (userData) => {
     // Periksa apakah username sudah ada
     const existingUser = await this.getUserByUsername(username);
     if (existingUser.length > 0) {
-      throw new Error("Pengguna sudah ada.");
+      throw err; // Lempar error agar bisa ditangani di controller
     }
 
     const sql = `
@@ -87,7 +87,7 @@ exports.createUser = async (userData) => {
     const result = await query(sql, [name, email, username, hashedPassword, role_id]);
     return result;
   } catch (err) {
-    throw new Error("Gagal membuat pengguna baru.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
 
@@ -100,7 +100,7 @@ exports.updateUser = async (userId, userData) => {
     // Periksa apakah pengguna ada berdasarkan ID
     const existingUser = await this.getUserById(userId);
     if (existingUser.length === 0) {
-      throw new Error("Pengguna tidak ditemukan.");
+      throw err; // Lempar error agar bisa ditangani di controller
     }
 
     const sql = `
@@ -112,7 +112,7 @@ exports.updateUser = async (userId, userData) => {
     const result = await query(sql, [name, email, username, hashedPassword, role_id, userId]);
     return result;
   } catch (err) {
-    throw new Error("Gagal memperbarui data pengguna.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
 
@@ -123,6 +123,6 @@ exports.deleteUser = async (userId) => {
     const result = await query(sql, [userId]);
     return result;
   } catch (err) {
-    throw new Error("Gagal menghapus pengguna.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
