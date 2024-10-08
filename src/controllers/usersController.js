@@ -1,5 +1,6 @@
 const UserModel = require("../models/userModel");
-const bcrypt = require('bcrypt');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const { generateAccessToken, generateRefreshToken } = require("../utils/authUtils");
 const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
@@ -12,26 +13,64 @@ exports.login = async (req, res) => {
   try {
     const userResult = await UserModel.getUserByUsernameOrEmail(usernameOrEmail);
     if (userResult.length === 0) {
-      return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
+      return res.status(404).json({ message: "Pengguna tidak ditemukan." });
     }
 
     const user = userResult[0];
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
-      return res.status(400).json({ message: 'Password salah.' });
+      return res.status(400).json({ message: "Password salah." });
     }
 
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
+    console.log("Login berhasil untuk pengguna:", user); // Log user saat berhasil login
+
     res.status(200).json({
       accessToken,
       refreshToken,
-      message: 'Login berhasil',
+      message: "Login berhasil",
     });
   } catch (error) {
-    res.status(500).json({ message: 'Terjadi kesalahan saat login.' });
+    console.error("Kesalahan saat login:", error); // Tambahkan log kesalahan
+    res.status(500).json({ message: "Terjadi kesalahan server." });
+  }
+};
+
+/**
+ * Mendapatkan data pengguna berdasarkan token JWT
+ */
+exports.getMe = async (req, res) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      console.log("Token tidak ditemukan di header."); // Tambahkan log jika token tidak ada
+      return res.status(401).json({ message: "Token tidak ada." });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        console.log("Token tidak valid:", err.message); // Log kesalahan verifikasi token
+        return res.status(403).json({ message: "Token tidak valid." });
+      }
+
+      const user = await UserModel.getUserById(decoded.id);
+      if (!user || user.length === 0) {
+        console.log("Pengguna tidak ditemukan dengan id:", decoded.id); // Log jika user tidak ditemukan
+        return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+      }
+
+      const { password, ...userData } = user[0];
+      console.log("Data pengguna yang ditemukan:", userData); // Log user yang ditemukan
+      return res.status(200).json(userData);
+    });
+  } catch (error) {
+    console.error("Kesalahan server pada /users/me:", error); // Tambahkan log kesalahan server
+    res.status(500).json({ message: "Terjadi kesalahan server." });
   }
 };
 

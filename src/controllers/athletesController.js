@@ -93,12 +93,14 @@ exports.deleteAthlete = async (req, res) => {
   const athleteId = req.params.id;
 
   try {
-    const result = await AthleteModel.deleteAthlete(athleteId);
-    if (result.affectedRows === 0) {
+    const athlete = await AthleteModel.getAthleteById(athleteId);
+    if (athlete.length === 0) {
       return handleErrorResponse(res, 404, "Atlet tidak ditemukan.");
     }
+
+    await AthleteModel.deleteAthlete(athleteId);
     handleSuccessResponse(res, null, "Atlet berhasil dihapus.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menghapus data atlet.");
   }
-};
+}
