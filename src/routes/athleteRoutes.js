@@ -4,7 +4,7 @@ const athleteController = require("../controllers/athletesController");
 
 router.get("/", athleteController.getAllAthletes);
 router.get("/:id", athleteController.getAthleteById);
-router.post("/", athleteController.createAthlete);
+router.post("/", athleteController.addAthlete);
 router.put("/:id", athleteController.updateAthlete);
 router.delete("/:id", athleteController.deleteAthlete);
 

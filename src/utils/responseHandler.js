@@ -5,12 +5,10 @@
  * @param {String} message - Pesan sukses
  */
 const handleSuccessResponse = (res, data = null, message = "Operasi berhasil.") => {
-  console.log({
-    status: "success",
-    message,
-    data: data ? `Jumlah data: ${Array.isArray(data) ? data.length : 1}` : "Tidak ada data",
-  });
+  // Log response sukses
+  console.log(`[${res.req.method}] ${res.req.originalUrl} - Sukses: ${message}`);
 
+  // Kirim response sukses
   res.status(200).json({
     status: "success",
     message,
@@ -25,12 +23,10 @@ const handleSuccessResponse = (res, data = null, message = "Operasi berhasil.") 
  * @param {String} message - Pesan error
  */
 const handleErrorResponse = (res, statusCode = 500, message = "Terjadi kesalahan.") => {
-  console.error({
-    status: "error",
-    statusCode,
-    message,
-  });
+  // Log response error
+  console.error(`[${res.req.method}] ${res.req.originalUrl} - Error ${statusCode}: ${message}`);
 
+  // Kirim response error
   res.status(statusCode).json({
     status: "error",
     message,

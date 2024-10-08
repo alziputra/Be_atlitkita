@@ -14,37 +14,42 @@ exports.getAllAthletes = async () => {
   try {
     const sql = `SELECT * FROM tb_athletes ORDER BY name ASC`;
     const result = await query(sql, []);
+
+    // Kembalikan semua hasil dalam bentuk array
     return result;
   } catch (err) {
-    throw new Error("Gagal mendapatkan semua data atlet.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
+
 
 // Mendapatkan atlet berdasarkan ID
 exports.getAthleteById = async (athleteId) => {
   try {
     const sql = `SELECT * FROM tb_athletes WHERE athlete_id = ?`;
     const result = await query(sql, [athleteId]);
-    return result;
+
+    // Jika hasil ditemukan, kembalikan atlet pertama (karena ID harus unik)
+    return result.length > 0 ? result[0] : null;
   } catch (err) {
-    throw new Error("Gagal mendapatkan data atlet berdasarkan ID.");
+    throw err; // Lempar error agar bisa ditangani di controller
   }
 };
 
-// Membuat atlet baru
-exports.createAthlete = async (athleteData) => {
+// Menambahkan atlet baru
+exports.addAthlete = async (athleteData) => {
   try {
     const { name, team, martial, weight, height } = athleteData;
-    
+
     const sql = `
       INSERT INTO tb_athletes (name, team, martial, weight, height) 
       VALUES (?, ?, ?, ?, ?)
     `;
-    
+
     const result = await query(sql, [name, team, martial, weight, height]);
     return result;
   } catch (err) {
-    throw new Error("Gagal membuat data atlet baru.");
+    throw err; // lempar error agar bisa ditangani di controller
   }
 };
 
@@ -52,7 +57,7 @@ exports.createAthlete = async (athleteData) => {
 exports.updateAthlete = async (athleteId, athleteData) => {
   try {
     const { name, team, martial, weight, height } = athleteData;
-    
+
     const sql = `
       UPDATE tb_athletes 
       SET name = ?, team = ?, martial = ?, weight = ?, height = ? 
@@ -62,7 +67,7 @@ exports.updateAthlete = async (athleteId, athleteData) => {
     const result = await query(sql, [name, team, martial, weight, height, athleteId]);
     return result;
   } catch (err) {
-    throw new Error("Gagal memperbarui data atlet.");
+    throw err; // lempar error agar bisa ditangani di controller
   }
 };
 
@@ -73,6 +78,6 @@ exports.deleteAthlete = async (athleteId) => {
     const result = await query(sql, [athleteId]);
     return result;
   } catch (err) {
-    throw new Error("Gagal menghapus data atlet.");
+    throw err; // lempar error agar bisa ditangani di controller
   }
 };
