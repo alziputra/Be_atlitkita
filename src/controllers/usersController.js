@@ -11,6 +11,7 @@ exports.login = async (req, res) => {
   const { usernameOrEmail, password } = req.body;
 
   try {
+    // Cari pengguna berdasarkan username atau email
     const userResult = await UserModel.getUserByUsernameOrEmail(usernameOrEmail);
     if (userResult.length === 0) {
       return res.status(404).json({ message: "Pengguna tidak ditemukan." });
@@ -19,14 +20,22 @@ exports.login = async (req, res) => {
     const user = userResult[0];
     const passwordMatch = await bcrypt.compare(password, user.password);
 
+    // Jika password tidak cocok
     if (!passwordMatch) {
       return res.status(400).json({ message: "Password salah." });
     }
 
+    // Generate access token dan refresh token
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    handleSuccessResponse(res, { accessToken, refreshToken }, "Login berhasil.");
+    // Kirim response sukses
+    return res.status(200).json({
+      status: "success",
+      message: "Login berhasil.",
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     console.error("Kesalahan saat login:", error); // Tambahkan log kesalahan
     handleErrorResponse(res, 500, "Terjadi kesalahan saat login.");
@@ -41,27 +50,36 @@ exports.getMe = async (req, res) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
+    // Jika token tidak ada
     if (!token) {
       return handleErrorResponse(res, 401, "Token tidak ditemukan.");
     }
 
+    // Verifikasi token
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
-        console.log("Token tidak valid:", err.message); // Log alasan token tidak valid
+        console.log("Token tidak valid:", err.message); // Log token tidak valid
         return handleErrorResponse(res, 403, "Token tidak valid.");
       }
 
+      // Cari user berdasarkan id dari decoded token
       const user = await UserModel.getUserById(decoded.id);
       if (!user || user.length === 0) {
         return handleErrorResponse(res, 404, "Pengguna tidak ditemukan.");
       }
 
+      // Hapus password sebelum mengirimkan data user
       const { password, ...userData } = user[0];
-      handleSuccessResponse(res, userData, "Data pengguna berhasil diambil.");
+      return res.status(200).json({
+        status: "success",
+        message: "Data pengguna berhasil diambil.",
+        data: userData,
+      });
     });
   } catch (error) {
-    console.error("Kesalahan server pada /users/me:", error); // Tambahkan log kesalahan server
-    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
+    // Log error server
+    console.error("Kesalahan server pada /users/me:", error);
+    return handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
   }
 };
 
