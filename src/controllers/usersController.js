@@ -58,23 +58,36 @@ exports.getMe = async (req, res) => {
     // Verifikasi token
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
+        // Jika token kadaluarsa
+        if (err.name === "TokenExpiredError") {
+          console.log("Token kadaluarsa:", err.message); // Log token kadaluarsa
+          return handleErrorResponse(res, 401, "Token kadaluarsa. Silakan login kembali.");
+        }
+
+        // Jika token tidak valid
         console.log("Token tidak valid:", err.message); // Log token tidak valid
         return handleErrorResponse(res, 403, "Token tidak valid.");
       }
 
-      // Cari user berdasarkan id dari decoded token
-      const user = await UserModel.getUserById(decoded.id);
-      if (!user || user.length === 0) {
-        return handleErrorResponse(res, 404, "Pengguna tidak ditemukan.");
-      }
+      // Jika token valid, lanjutkan proses untuk mencari user
+      try {
+        // Cari user berdasarkan id dari decoded token
+        const user = await UserModel.getUserById(decoded.id);
+        if (!user || user.length === 0) {
+          return handleErrorResponse(res, 404, "Pengguna tidak ditemukan.");
+        }
 
-      // Hapus password sebelum mengirimkan data user
-      const { password, ...userData } = user[0];
-      return res.status(200).json({
-        status: "success",
-        message: "Data pengguna berhasil diambil.",
-        data: userData,
-      });
+        // Hapus password dari data pengguna sebelum dikembalikan
+        const { password, ...userData } = user[0];
+        return res.status(200).json({
+          status: "success",
+          message: "Data pengguna berhasil diambil.",
+          data: userData,
+        });
+      } catch (error) {
+        console.error("Kesalahan saat mencari pengguna:", error); // Log kesalahan saat mencari user
+        return handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
+      }
     });
   } catch (error) {
     // Log error server
