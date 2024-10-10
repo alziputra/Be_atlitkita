@@ -32,7 +32,7 @@ exports.getCompetitionById = async (req, res) => {
 /**
  * Create new competition
  */
-exports.createCompetition = async (req, res) => {
+exports.addCompetition = async (req, res) => {
   const { competition_name, competition_date, status } = req.body;
 
   // Validasi input
@@ -41,7 +41,7 @@ exports.createCompetition = async (req, res) => {
   }
 
   try {
-    const newCompetition = await CompetitionModel.createCompetition({ competition_name, competition_date, status });
+    const newCompetition = await CompetitionModel.addCompetition({ competition_name, competition_date, status });
     handleSuccessResponse(res, newCompetition, "Kompetisi berhasil ditambahkan.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan kompetisi.");

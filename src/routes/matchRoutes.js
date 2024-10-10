@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const matchController = require("../controllers/matchController");
-const resultController = require("../controllers/resultController");
+const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
 
-// Route untuk pertandingan
-router.get("/", matchController.getAllMatches);
-router.get("/:id", matchController.getMatchById);
-router.post("/", matchController.createMatch);
-router.put("/:id", matchController.updateMatch);
-router.delete("/:id", matchController.deleteMatch);
+// Hanya admin yang bisa mengelola pertandingan
+router.get("/", verifyToken, verifyRole(["admin"]), matchController.getAllMatches);
+router.get("/:id", verifyToken, verifyRole(["admin"]), matchController.getMatchById);
+router.post("/", verifyToken, verifyRole(["admin"]), matchController.addMatch);
+router.put("/:id", verifyToken, verifyRole(["admin"]), matchController.updateMatch);
+router.delete("/:id", verifyToken, verifyRole(["admin"]), matchController.deleteMatch);
 
 module.exports = router;

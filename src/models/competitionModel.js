@@ -32,7 +32,7 @@ exports.getCompetitionById = async (competitionId) => {
 };
 
 // Membuat kompetisi baru
-exports.createCompetition = async (competitionData) => {
+exports.addCompetition = async (competitionData) => {
   try {
     const { competition_name, competition_date, status } = competitionData;
 

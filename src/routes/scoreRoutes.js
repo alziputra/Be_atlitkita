@@ -1,15 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const scoresController = require("../controllers/scoreController");
+const scoreController = require("../controllers/scoreController");
 const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
 
-// Semua pengguna dapat mengakses atau melihat daftar skor
-router.get("/", verifyToken, scoresController.getAllScores);
-router.get("/:id", verifyToken, scoresController.getScoresByMatchId);
-
-// Hanya pengguna dengan role "admin" yang dapat membuat, mengubah, dan menghapus skor
-router.post("/", verifyToken, verifyRole("judge"), scoresController.createScore);
-router.put("/:id", verifyToken, verifyRole("judge"), scoresController.updateScore);
-router.delete("/:id", verifyToken, verifyRole("judge"), scoresController.deleteScore);
+// Hanya juri yang bisa memberikan penilaian
+router.get("/", verifyToken, verifyRole(["judge"]), scoreController.getAllScores);
+router.get("/:id", verifyToken, verifyRole(["judge"]), scoreController.getScoreById);
+router.post("/", verifyToken, verifyRole(["judge"]), scoreController.addScore);
+router.put("/:id", verifyToken, verifyRole(["judge"]), scoreController.updateScore);
+router.delete("/:id", verifyToken, verifyRole(["judge"]), scoreController.deleteScore);
 
 module.exports = router;

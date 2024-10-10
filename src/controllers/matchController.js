@@ -32,7 +32,7 @@ exports.getMatchById = async (req, res) => {
 /**
  * Create new match
  */
-exports.createMatch = async (req, res) => {
+exports.addMatch = async (req, res) => {
   const { competition_id, athlete1_id, athlete2_id } = req.body;
 
   // Validasi input
@@ -42,7 +42,7 @@ exports.createMatch = async (req, res) => {
 
   try {
     // Menambahkan pertandingan baru
-    const result = await MatchModel.createMatch({ competition_id, athlete1_id, athlete2_id });
+    const result = await MatchModel.addMatch({ competition_id, athlete1_id, athlete2_id });
 
     // Mengambil kembali data pertandingan yang baru ditambahkan
     const newMatch = await MatchModel.getMatchById(result.insertId);

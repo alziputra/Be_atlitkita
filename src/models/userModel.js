@@ -12,20 +12,29 @@ const query = (sql, params) => {
 };
 
 // Mendapatkan pengguna berdasarkan username atau email
-exports.getUserByUsernameOrEmail = (usernameOrEmail) => {
-  const sql = `SELECT * FROM tb_users WHERE username = ? OR email = ?`;
-  return query(sql, [usernameOrEmail, usernameOrEmail]);
+exports.getUserByUsernameOrEmail = async (usernameOrEmail) => {
+  try {
+    const sql = `SELECT users.*, roles.role_name 
+      FROM tb_users AS users
+      JOIN tb_roles AS roles 
+      ON users.role_id = roles.role_id
+      WHERE users.username = ? OR users.email = ?
+    `;
+    const result = await query(sql, [usernameOrEmail, usernameOrEmail]);
+    return result;
+  } catch (error) {
+    throw error; // Lempar error agar bisa ditangani di controller
+  }
 };
 
 // Mendapatkan pengguna berdasarkan username
 exports.getUserByUsername = async (username) => {
   try {
-    const sql = `
+    sql = `
       SELECT users.*, roles.role_name 
-      FROM tb_users AS users
-      JOIN tb_roles AS roles ON users.role_id = roles.role_id
-      WHERE users.username = ?
-    `;
+      FROM tb_users AS users 
+      JOIN tb_roles AS roles ON users.role_id = roles.role_id 
+      WHERE users.username = ?`;
 
     const result = await query(sql, [username]);
     return result;

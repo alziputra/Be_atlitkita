@@ -16,11 +16,11 @@ exports.getAllResults = async (req, res) => {
 /**
  * Get results by match ID
  */
-exports.getResultsByMatchId = async (req, res) => {
+exports.getResultById = async (req, res) => {
   const matchId = req.params.id;
 
   try {
-    const results = await ResultModel.getResultsByMatchId(matchId);
+    const results = await ResultModel.getResultById(matchId);
     if (results.length === 0) {
       return handleErrorResponse(res, 404, "Hasil tidak ditemukan untuk pertandingan ini.");
     }
@@ -33,7 +33,7 @@ exports.getResultsByMatchId = async (req, res) => {
 /**
  * Create new result based on scores
  */
-exports.createResult = async (req, res) => {
+exports.addResult = async (req, res) => {
   const matchId = req.body.match_id;
 
   if (!matchId) {
@@ -42,16 +42,16 @@ exports.createResult = async (req, res) => {
 
   try {
     // Cek apakah hasil untuk match_id sudah ada di tb_results
-    const existingResult = await ResultModel.getResultsByMatchId(matchId);
+    const existingResult = await ResultModel.getResultById(matchId);
     if (existingResult.length > 0) {
       return handleErrorResponse(res, 409, "Hasil pertandingan untuk ID ini sudah ada.");
     }
 
     // Membuat hasil baru berdasarkan ID pertandingan
-    const newResult = await ResultModel.createResult(matchId);
+    const newResult = await ResultModel.addResult(matchId);
 
     // Mengambil data hasil pertandingan yang baru dibuat
-    const resultData = await ResultModel.getResultsByMatchId(matchId);
+    const resultData = await ResultModel.getResultById(matchId);
 
     handleSuccessResponse(res, resultData, "Hasil pertandingan berhasil dibuat.");
   } catch (err) {

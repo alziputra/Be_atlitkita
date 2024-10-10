@@ -105,7 +105,7 @@ exports.getAllUsers = async (req, res) => {
     if (users.length > 0) {
       // Hapus password dari setiap user sebelum dikembalikan
       const sanitizedUsers = users.map((user) => {
-        delete user.password;
+        delete user.password; // Hapus password untuk keamanan
         return user;
       });
       handleSuccessResponse(res, sanitizedUsers, "Data pengguna berhasil diambil.");
@@ -113,6 +113,7 @@ exports.getAllUsers = async (req, res) => {
       handleSuccessResponse(res, [], "Tidak ada pengguna yang ditemukan.");
     }
   } catch (err) {
+    console.error("Kesalahan saat mengambil data pengguna:", err);
     handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
   }
 };

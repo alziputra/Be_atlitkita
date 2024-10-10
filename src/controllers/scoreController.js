@@ -16,10 +16,10 @@ exports.getAllScores = async (req, res) => {
 /**
  * Get scores by match ID
  */
-exports.getScoresByMatchId = async (req, res) => {
+exports.getScoreById = async (req, res) => {
   const matchId = req.params.id;
   try {
-    const scores = await ScoreModel.getScoresByMatchId(matchId);
+    const scores = await ScoreModel.getScoreById(matchId);
     if (scores.length === 0) {
       return handleErrorResponse(res, 404, "Skor tidak ditemukan untuk pertandingan ini.");
     }
@@ -32,7 +32,7 @@ exports.getScoresByMatchId = async (req, res) => {
 /**
  * Create new score
  */
-exports.createScore = async (req, res) => {
+exports.addScore = async (req, res) => {
   const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = req.body;
 
   if (!match_id || !judge_id || !athlete_id) {
@@ -40,7 +40,7 @@ exports.createScore = async (req, res) => {
   }
 
   try {
-    const newScore = await ScoreModel.createScore({ match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score });
+    const newScore = await ScoreModel.addScore({ match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score });
     handleSuccessResponse(res, newScore, "Skor berhasil ditambahkan.");
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan skor.");

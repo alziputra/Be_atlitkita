@@ -3,10 +3,11 @@ const router = express.Router();
 const athleteController = require("../controllers/athletesController");
 const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
 
-router.get("/", verifyToken, athleteController.getAllAthletes);
-router.get("/:id", athleteController.getAthleteById);
-router.post("/", athleteController.addAthlete);
-router.put("/:id", athleteController.updateAthlete);
-router.delete("/:id", athleteController.deleteAthlete);
+// Hanya admin yang bisa melihat, menambah, mengedit, dan menghapus data atlet
+router.get("/", verifyToken, verifyRole(["admin"]), athleteController.getAllAthletes);
+router.get("/:id", verifyToken, verifyRole(["admin"]), athleteController.getAthleteById);
+router.post("/", verifyToken, verifyRole(["admin"]), athleteController.addAthlete);
+router.put("/:id", verifyToken, verifyRole(["admin"]), athleteController.updateAthlete);
+router.delete("/:id", verifyToken, verifyRole(["admin"]), athleteController.deleteAthlete);
 
 module.exports = router;

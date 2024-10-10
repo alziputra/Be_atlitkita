@@ -20,7 +20,7 @@ exports.getAllMatches = async () => {
       JOIN tb_athletes AS a2 ON m.athlete2_id = a2.athlete_id
       ORDER BY m.match_date DESC
     `;
-    
+
     const result = await query(sql, []);
     return result;
   } catch (err) {
@@ -48,10 +48,10 @@ exports.getMatchById = async (matchId) => {
 };
 
 // Membuat pertandingan baru
-exports.createMatch = async (matchData) => {
+exports.addMatch = async (matchData) => {
   try {
     const { competition_id, athlete1_id, athlete2_id } = matchData;
-    
+
     const sql = `
       INSERT INTO tb_matches (competition_id, athlete1_id, athlete2_id) 
       VALUES (?, ?, ?)
@@ -68,7 +68,7 @@ exports.createMatch = async (matchData) => {
 exports.updateMatch = async (matchId, matchData) => {
   try {
     const { competition_id, athlete1_id, athlete2_id } = matchData;
-    
+
     const sql = `
       UPDATE tb_matches 
       SET competition_id = ?, athlete1_id = ?, athlete2_id = ? 

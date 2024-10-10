@@ -23,7 +23,7 @@ exports.getAllScores = async () => {
 };
 
 // Mendapatkan skor berdasarkan ID pertandingan
-exports.getScoresByMatchId = async (matchId) => {
+exports.getScoreById = async (matchId) => {
   const sql = `
     SELECT s.*, a.name AS athlete_name, u.name AS judge_name
     FROM tb_scores s
@@ -35,7 +35,7 @@ exports.getScoresByMatchId = async (matchId) => {
 };
 
 // Membuat skor baru
-exports.createScore = async (scoreData) => {
+exports.addScore = async (scoreData) => {
   const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = scoreData;
   const sql = `
     INSERT INTO tb_scores (match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score)

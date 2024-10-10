@@ -24,7 +24,7 @@ exports.getAllResults = async () => {
 };
 
 // Mendapatkan hasil akhir pertandingan berdasarkan ID pertandingan
-exports.getResultsByMatchId = async (matchId) => {
+exports.getResultById = async (matchId) => {
   const sql = `
     SELECT r.*, a1.name AS athlete1_name, a2.name AS athlete2_name, a3.name AS winner_name 
     FROM tb_results r
@@ -38,7 +38,7 @@ exports.getResultsByMatchId = async (matchId) => {
 };
 
 // Membuat hasil baru berdasarkan skor dari tb_scores
-exports.createResult = async (matchId) => {
+exports.addResult = async (matchId) => {
   try {
     // Mengambil skor dari tb_scores untuk kedua atlet dalam satu pertandingan
     const sql = `
