@@ -26,16 +26,10 @@ exports.login = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    console.log("Login berhasil untuk pengguna:", user); // Log user saat berhasil login
-
-    res.status(200).json({
-      accessToken,
-      refreshToken,
-      message: "Login berhasil",
-    });
+    handleSuccessResponse(res, { accessToken, refreshToken }, "Login berhasil.");
   } catch (error) {
     console.error("Kesalahan saat login:", error); // Tambahkan log kesalahan
-    res.status(500).json({ message: "Terjadi kesalahan server." });
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat login.");
   }
 };
 
@@ -48,29 +42,26 @@ exports.getMe = async (req, res) => {
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-      console.log("Token tidak ditemukan di header."); // Tambahkan log jika token tidak ada
-      return res.status(401).json({ message: "Token tidak ada." });
+      return handleErrorResponse(res, 401, "Token tidak ditemukan.");
     }
 
     jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
       if (err) {
-        console.log("Token tidak valid:", err.message); // Log kesalahan verifikasi token
-        return res.status(403).json({ message: "Token tidak valid." });
+        console.log("Token tidak valid:", err.message); // Log alasan token tidak valid
+        return handleErrorResponse(res, 403, "Token tidak valid.");
       }
 
       const user = await UserModel.getUserById(decoded.id);
       if (!user || user.length === 0) {
-        console.log("Pengguna tidak ditemukan dengan id:", decoded.id); // Log jika user tidak ditemukan
-        return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+        return handleErrorResponse(res, 404, "Pengguna tidak ditemukan.");
       }
 
       const { password, ...userData } = user[0];
-      console.log("Data pengguna yang ditemukan:", userData); // Log user yang ditemukan
-      return res.status(200).json(userData);
+      handleSuccessResponse(res, userData, "Data pengguna berhasil diambil.");
     });
   } catch (error) {
     console.error("Kesalahan server pada /users/me:", error); // Tambahkan log kesalahan server
-    res.status(500).json({ message: "Terjadi kesalahan server." });
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
   }
 };
 
