@@ -60,7 +60,7 @@ exports.addAthlete = async (req, res) => {
     handleSuccessResponse(
       res,
       {
-        id: insertedAthleteId, // Sertakan athleteId dalam response
+        athlete_id: insertedAthleteId, // Sertakan athleteId dalam response
         name,
         team,
         martial,
@@ -106,7 +106,7 @@ exports.updateAthlete = async (req, res) => {
     handleSuccessResponse(
       res,
       {
-        id: athleteId,
+        athlete_id: athleteId,
         name,
         team,
         martial,

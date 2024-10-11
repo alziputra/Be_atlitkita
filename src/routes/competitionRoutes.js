@@ -4,7 +4,7 @@ const competitionController = require("../controllers/competitionsController");
 const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
 
 // Hanya admin yang bisa mengelola kompetisi
-router.get("/", verifyToken, verifyRole(["admin"]), competitionController.getAllCompetitions);
+router.get("/", verifyToken, verifyRole(["admin","judge"]), competitionController.getAllCompetitions);
 router.get("/:id", verifyToken, verifyRole(["admin"]), competitionController.getCompetitionById);
 router.post("/", verifyToken, verifyRole(["admin"]), competitionController.addCompetition);
 router.put("/:id", verifyToken, verifyRole(["admin"]), competitionController.updateCompetition);

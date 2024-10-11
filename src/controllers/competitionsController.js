@@ -30,7 +30,7 @@ exports.getCompetitionById = async (req, res) => {
 };
 
 /**
- * Create new competition
+ * Add new competition
  */
 exports.addCompetition = async (req, res) => {
   const { competition_name, competition_date, status } = req.body;
@@ -41,9 +41,23 @@ exports.addCompetition = async (req, res) => {
   }
 
   try {
-    const newCompetition = await CompetitionModel.addCompetition({ competition_name, competition_date, status });
+    const newCompetitionId = await CompetitionModel.createCompetition({
+      competition_name,
+      competition_date,
+      status,
+    });
+
+    // Dapatkan data kompetisi baru yang telah ditambahkan untuk dikirim ke frontend
+    const newCompetition = {
+      competition_id: newCompetitionId.insertId, // Gunakan insertId dari database
+      competition_name,
+      competition_date,
+      status,
+    };
+
     handleSuccessResponse(res, newCompetition, "Kompetisi berhasil ditambahkan.");
-  } catch (err) {
+  } catch (error) {
+    console.error("Kesalahan saat menambahkan kompetisi:", error);
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan kompetisi.");
   }
 };
