@@ -37,12 +37,23 @@ exports.getScoreById = async (matchId) => {
 // Membuat skor baru
 exports.addScore = async (scoreData) => {
   const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = scoreData;
+
   const sql = `
-    INSERT INTO tb_scores (match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO tb_scores (match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  return await query(sql, [match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score]);
+  const result = await query(sql, [match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score]);
+
+  if (result.insertId) {
+    // Ambil data skor yang baru saja dimasukkan berdasarkan insertId
+    const newScoreSql = `SELECT * FROM tb_scores WHERE id = ?`;
+    const newScore = await query(newScoreSql, [result.insertId]);
+    return newScore[0]; // Mengembalikan data skor yang baru
+  }
+
+  return result;
 };
+
 
 // Memperbarui skor berdasarkan ID
 exports.updateScore = async (scoreId, scoreData) => {

@@ -41,7 +41,7 @@ exports.addCompetition = async (req, res) => {
   }
 
   try {
-    const newCompetitionId = await CompetitionModel.createCompetition({
+    const newCompetitionId = await CompetitionModel.addCompetition({
       competition_name,
       competition_date,
       status,
