@@ -6,9 +6,6 @@ const { verifyToken, verifyRole } = require("../middleware/authMiddleware");
 // Endpoint login tidak memerlukan token
 router.post("/login", userController.login);
 
-// Route untuk mendapatkan data pengguna yang sedang login
-router.get("/me", verifyToken, userController.getMe);
-
 // Hanya admin yang bisa mengelola data pengguna
 router.get("/", verifyToken, verifyRole(["admin", "judge"]), userController.getAllUsers);
 router.get("/:id", verifyToken, verifyRole(["admin"]), userController.getUserById);

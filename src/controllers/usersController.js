@@ -1,7 +1,7 @@
 const UserModel = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { generateAccessToken, generateRefreshToken } = require("../utils/authUtils");
+const { generateToken } = require("../utils/authUtils");
 const { handleErrorResponse, handleSuccessResponse } = require("../utils/responseHandler");
 
 /**
@@ -25,74 +25,18 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Password salah." });
     }
 
-    // Generate access token dan refresh token
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
+    // Generate token
+    const Token = generateToken(user);
 
     // Kirim response sukses
     return res.status(200).json({
       status: "success",
       message: "Login berhasil.",
-      accessToken,
-      refreshToken,
+      Token,
     });
   } catch (error) {
     console.error("Kesalahan saat login:", error); // Tambahkan log kesalahan
     handleErrorResponse(res, 500, "Terjadi kesalahan saat login.");
-  }
-};
-
-/**
- * Mendapatkan data pengguna berdasarkan token JWT
- */
-exports.getMe = async (req, res) => {
-  try {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
-
-    // Jika token tidak ada
-    if (!token) {
-      return handleErrorResponse(res, 401, "Token tidak ditemukan.");
-    }
-
-    // Verifikasi token
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        // Jika token kadaluarsa
-        if (err.name === "TokenExpiredError") {
-          console.log("Token kadaluarsa:", err.message); // Log token kadaluarsa
-          return handleErrorResponse(res, 401, "Token kadaluarsa. Silakan login kembali.");
-        }
-
-        // Jika token tidak valid
-        console.log("Token tidak valid:", err.message); // Log token tidak valid
-        return handleErrorResponse(res, 403, "Token tidak valid.");
-      }
-
-      // Jika token valid, lanjutkan proses untuk mencari user
-      try {
-        // Cari user berdasarkan id dari decoded token
-        const user = await UserModel.getUserById(decoded.id);
-        if (!user || user.length === 0) {
-          return handleErrorResponse(res, 404, "Pengguna tidak ditemukan.");
-        }
-
-        // Hapus password dari data pengguna sebelum dikembalikan
-        const { password, ...userData } = user[0];
-        return res.status(200).json({
-          status: "success",
-          message: "Data pengguna berhasil diambil.",
-          data: userData,
-        });
-      } catch (error) {
-        console.error("Kesalahan saat mencari pengguna:", error); // Log kesalahan saat mencari user
-        return handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
-      }
-    });
-  } catch (error) {
-    // Log error server
-    console.error("Kesalahan server pada /users/me:", error);
-    return handleErrorResponse(res, 500, "Terjadi kesalahan saat mengambil data pengguna.");
   }
 };
 
