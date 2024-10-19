@@ -33,16 +33,17 @@ exports.getCompetitionById = async (req, res) => {
  * Add new competition
  */
 exports.addCompetition = async (req, res) => {
-  const { competition_name, competition_date, status } = req.body;
+  const { competition_name, location, competition_date, status } = req.body;
 
   // Validasi input
-  if (!competition_name || !competition_date || !status) {
+  if (!competition_name || !location || !competition_date || !status) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
   try {
     const newCompetitionId = await CompetitionModel.addCompetition({
       competition_name,
+      location,
       competition_date,
       status,
     });
@@ -51,6 +52,7 @@ exports.addCompetition = async (req, res) => {
     const newCompetition = {
       competition_id: newCompetitionId.insertId, // Gunakan insertId dari database
       competition_name,
+      location,
       competition_date,
       status,
     };
@@ -67,10 +69,10 @@ exports.addCompetition = async (req, res) => {
  */
 exports.updateCompetition = async (req, res) => {
   const competitionId = req.params.id;
-  const { competition_name, competition_date, status } = req.body;
+  const { competition_name, location, competition_date, status } = req.body;
 
   // Validasi input
-  if (!competition_name || !competition_date || !status) {
+  if (!competition_name || !location || !competition_date || !status) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
@@ -80,13 +82,14 @@ exports.updateCompetition = async (req, res) => {
       return handleErrorResponse(res, 404, "Kompetisi tidak ditemukan.");
     }
 
-    await CompetitionModel.updateCompetition(competitionId, { competition_name, competition_date, status });
+    await CompetitionModel.updateCompetition(competitionId, { competition_name, location, competition_date, status });
 
     handleSuccessResponse(
       res,
       {
         id: competitionId,
         competition_name,
+        location,
         competition_date,
         status,
         updated_at: new Date().toISOString(),

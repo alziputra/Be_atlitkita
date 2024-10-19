@@ -34,14 +34,14 @@ exports.getCompetitionById = async (competitionId) => {
 // Membuat kompetisi baru
 exports.addCompetition = async (competitionData) => {
   try {
-    const { competition_name, competition_date, status } = competitionData;
+    const { competition_name, location, competition_date, status } = competitionData;
 
     const sql = `
-      INSERT INTO tb_competitions (competition_name, competition_date, status) 
-      VALUES (?, ?, ?)
+      INSERT INTO tb_competitions (competition_name, location, competition_date, status) 
+      VALUES (?, ?, ?, ?)
     `;
 
-    const result = await query(sql, [competition_name, competition_date, status]);
+    const result = await query(sql, [competition_name, location, competition_date, status]);
     return result;
   } catch (err) {
     throw new Error("Gagal membuat kompetisi baru.");
@@ -51,7 +51,7 @@ exports.addCompetition = async (competitionData) => {
 // Memperbarui kompetisi
 exports.updateCompetition = async (competitionId, competitionData) => {
   try {
-    const { competition_name, competition_date, status } = competitionData;
+    const { competition_name, location, competition_date, status } = competitionData;
 
     const sql = `
       UPDATE tb_competitions 
@@ -59,7 +59,7 @@ exports.updateCompetition = async (competitionId, competitionData) => {
       WHERE competition_id = ?
     `;
 
-    const result = await query(sql, [competition_name, competition_date, status, competitionId]);
+    const result = await query(sql, [competition_name, location, competition_date, status, competitionId]);
     return result;
   } catch (err) {
     throw new Error("Gagal memperbarui data kompetisi.");
