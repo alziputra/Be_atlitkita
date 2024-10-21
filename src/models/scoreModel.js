@@ -36,24 +36,20 @@ exports.getScoreById = async (matchId) => {
 
 // Membuat skor baru
 exports.addScore = async (scoreData) => {
-  const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = scoreData;
+  try {
+    const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = scoreData;
 
-  const sql = `
-  INSERT INTO tb_scores (match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  const result = await query(sql, [match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score]);
+    const sql = `
+      INSERT INTO tb_scores (match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
 
-  if (result.insertId) {
-    // Ambil data skor yang baru saja dimasukkan berdasarkan insertId
-    const newScoreSql = `SELECT * FROM tb_scores WHERE id = ?`;
-    const newScore = await query(newScoreSql, [result.insertId]);
-    return newScore[0]; // Mengembalikan data skor yang baru
+    const result = await query(sql, [match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score]);
+    return result;
+  } catch (err) {
+    throw err; // Lempar error agar bisa ditangani di controller
   }
-
-  return result;
 };
-
 
 // Memperbarui skor berdasarkan ID
 exports.updateScore = async (scoreId, scoreData) => {

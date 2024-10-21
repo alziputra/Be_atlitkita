@@ -35,13 +35,49 @@ exports.getScoreById = async (req, res) => {
 exports.addScore = async (req, res) => {
   const { match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score } = req.body;
 
+  // Validasi input
   if (!match_id || !judge_id || !athlete_id) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
+  // Pastikan semua nilai skor valid
+  if ([kick_score, punch_score, elbow_score, knee_score, throw_score].some((score) => typeof score !== "number")) {
+    return handleErrorResponse(res, 400, "Semua skor harus berupa angka.");
+  }
+
   try {
-    const newScore = await ScoreModel.addScore({ match_id, judge_id, athlete_id, kick_score, punch_score, elbow_score, knee_score, throw_score });
-    handleSuccessResponse(res, newScore, "Skor berhasil ditambahkan.");
+    // Tambahkan skor ke database
+    const result = await ScoreModel.addScore({
+      match_id,
+      judge_id,
+      athlete_id,
+      kick_score,
+      punch_score,
+      elbow_score,
+      knee_score,
+      throw_score,
+    });
+
+    // Pastikan ID skor yang baru dibuat dikembalikan
+    const insertedScoreId = result.insertId;
+
+    // Kirim response sukses dengan data skor yang baru dibuat
+    handleSuccessResponse(
+      res,
+      {
+        score_id: insertedScoreId, // Sertakan scoreId dalam response
+        match_id,
+        judge_id,
+        athlete_id,
+        kick_score,
+        punch_score,
+        elbow_score,
+        knee_score,
+        throw_score,
+        created_at: new Date().toISOString(),
+      },
+      "Skor berhasil ditambahkan."
+    );
   } catch (err) {
     handleErrorResponse(res, 500, "Terjadi kesalahan saat menambahkan skor.");
   }

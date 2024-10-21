@@ -33,18 +33,18 @@ exports.getMatchById = async (req, res) => {
  * Create new match
  */
 exports.addMatch = async (req, res) => {
-  const { competition_id, athlete1_id, athlete2_id } = req.body;
+  const { competition_id, athlete1_id, athlete2_id, match_number } = req.body;
 
-  // Validasi input
-  if (!competition_id || !athlete1_id || !athlete2_id) {
+  // Validate input
+  if (!competition_id || !athlete1_id || !athlete2_id || match_number == null) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
   try {
-    // Menambahkan pertandingan baru
-    const result = await MatchModel.addMatch({ competition_id, athlete1_id, athlete2_id });
+    // Add new match
+    const result = await MatchModel.addMatch({ competition_id, athlete1_id, athlete2_id, match_number });
 
-    // Mengambil kembali data pertandingan yang baru ditambahkan
+    // Retrieve the newly added match
     const newMatch = await MatchModel.getMatchById(result.insertId);
 
     handleSuccessResponse(res, newMatch[0], "Pertandingan berhasil ditambahkan.");
@@ -58,10 +58,10 @@ exports.addMatch = async (req, res) => {
  */
 exports.updateMatch = async (req, res) => {
   const matchId = req.params.id;
-  const { competition_id, athlete1_id, athlete2_id } = req.body;
+  const { competition_id, athlete1_id, athlete2_id, match_number } = req.body;
 
-  // Validasi input
-  if (!competition_id || !athlete1_id || !athlete2_id) {
+  // Validate input
+  if (!competition_id || !athlete1_id || !athlete2_id || match_number == null) {
     return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
   }
 
@@ -71,7 +71,7 @@ exports.updateMatch = async (req, res) => {
       return handleErrorResponse(res, 404, "Pertandingan tidak ditemukan.");
     }
 
-    await MatchModel.updateMatch(matchId, { competition_id, athlete1_id, athlete2_id });
+    await MatchModel.updateMatch(matchId, { competition_id, athlete1_id, athlete2_id, match_number });
 
     handleSuccessResponse(
       res,
@@ -80,6 +80,7 @@ exports.updateMatch = async (req, res) => {
         competition_id,
         athlete1_id,
         athlete2_id,
+        match_number,
         updated_at: new Date().toISOString(),
       },
       "Pertandingan berhasil diperbarui."

@@ -13,7 +13,7 @@ const query = (sql, params) => {
 exports.getAllMatches = async () => {
   try {
     const sql = `
-      SELECT m.*, c.competition_name, a1.name AS athlete1_name, a2.name AS athlete2_name 
+      SELECT m.*, c.competition_name, a1.name AS athlete1_name, a2.name AS athlete2_name, m.match_number 
       FROM tb_matches AS m
       JOIN tb_competitions AS c ON m.competition_id = c.competition_id
       JOIN tb_athletes AS a1 ON m.athlete1_id = a1.athlete_id
@@ -32,7 +32,7 @@ exports.getAllMatches = async () => {
 exports.getMatchById = async (matchId) => {
   try {
     const sql = `
-      SELECT m.*, c.competition_name, a1.name AS athlete1_name, a2.name AS athlete2_name 
+      SELECT m.*, c.competition_name, a1.name AS athlete1_name, a2.name AS athlete2_name, m.match_number
       FROM tb_matches AS m
       JOIN tb_competitions AS c ON m.competition_id = c.competition_id
       JOIN tb_athletes AS a1 ON m.athlete1_id = a1.athlete_id
@@ -50,14 +50,14 @@ exports.getMatchById = async (matchId) => {
 // Membuat pertandingan baru
 exports.addMatch = async (matchData) => {
   try {
-    const { competition_id, athlete1_id, athlete2_id } = matchData;
+    const { competition_id, athlete1_id, athlete2_id, match_number } = matchData;
 
     const sql = `
-      INSERT INTO tb_matches (competition_id, athlete1_id, athlete2_id) 
-      VALUES (?, ?, ?)
+      INSERT INTO tb_matches (competition_id, athlete1_id, athlete2_id, match_number) 
+      VALUES (?, ?, ?, ?)
     `;
 
-    const result = await query(sql, [competition_id, athlete1_id, athlete2_id]);
+    const result = await query(sql, [competition_id, athlete1_id, athlete2_id, match_number]);
     return result;
   } catch (err) {
     throw new Error("Gagal membuat pertandingan baru.");
@@ -67,15 +67,15 @@ exports.addMatch = async (matchData) => {
 // Memperbarui pertandingan
 exports.updateMatch = async (matchId, matchData) => {
   try {
-    const { competition_id, athlete1_id, athlete2_id } = matchData;
+    const { competition_id, athlete1_id, athlete2_id, match_number = null } = matchData;
 
     const sql = `
       UPDATE tb_matches 
-      SET competition_id = ?, athlete1_id = ?, athlete2_id = ? 
+      SET competition_id = ?, athlete1_id = ?, athlete2_id = ?, match_number = ?
       WHERE match_id = ?
     `;
 
-    const result = await query(sql, [competition_id, athlete1_id, athlete2_id, matchId]);
+    const result = await query(sql, [competition_id, athlete1_id, athlete2_id, match_number, matchId]);
     return result;
   } catch (err) {
     throw new Error("Gagal memperbarui data pertandingan.");
