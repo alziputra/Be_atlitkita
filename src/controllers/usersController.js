@@ -41,6 +41,37 @@ exports.login = async (req, res) => {
 };
 
 /**
+ * Register User
+ */
+exports.register = async (req, res) => {
+  const { name, email, username, password, role_id } = req.body;
+
+  // Validasi input
+  if (!name || !email || !username || !password || !role_id) {
+    return handleErrorResponse(res, 400, "Field yang dibutuhkan tidak lengkap.");
+  }
+
+  try {
+    // Pastikan email atau username belum digunakan
+    const existingUser = await UserModel.getUserByUsernameOrEmail(username);
+    if (existingUser.length > 0) {
+      return handleErrorResponse(res, 409, "Username atau Email sudah digunakan.");
+    }
+
+    // Buat user baru
+    const newUser = await UserModel.createUser({ name, email, username, password, role_id });
+
+    // Hindari mengembalikan password dalam response
+    const { user_id, created_at } = newUser;
+
+    handleSuccessResponse(res, { user_id, name, email, username, role_id, created_at }, "Pendaftaran berhasil.");
+  } catch (err) {
+    handleErrorResponse(res, 500, "Terjadi kesalahan saat mendaftarkan user.");
+  }
+};
+
+
+/**
  * Get all users
  */
 exports.getAllUsers = async (req, res) => {
