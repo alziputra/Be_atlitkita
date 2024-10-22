@@ -1,5 +1,6 @@
 const db = require("../config/db");
 
+// Wrapper untuk query database menggunakan Promise
 const query = (sql, params) => {
   return new Promise((resolve, reject) => {
     db.query(sql, params, (err, result) => {
@@ -16,6 +17,7 @@ exports.getAllCompetitions = async () => {
     const result = await query(sql, []);
     return result;
   } catch (err) {
+    console.error("Error fetching competitions:", err); // Log lebih rinci
     throw new Error("Gagal mendapatkan semua data kompetisi.");
   }
 };
@@ -27,6 +29,7 @@ exports.getCompetitionById = async (competitionId) => {
     const result = await query(sql, [competitionId]);
     return result;
   } catch (err) {
+    console.error("Error fetching competition by ID:", err);
     throw new Error("Gagal mendapatkan data kompetisi berdasarkan ID.");
   }
 };
@@ -44,6 +47,7 @@ exports.addCompetition = async (competitionData) => {
     const result = await query(sql, [competition_name, location, competition_date, status]);
     return result;
   } catch (err) {
+    console.error("Error adding competition:", err);
     throw new Error("Gagal membuat kompetisi baru.");
   }
 };
@@ -55,13 +59,14 @@ exports.updateCompetition = async (competitionId, competitionData) => {
 
     const sql = `
       UPDATE tb_competitions 
-      SET competition_name = ?, competition_date = ?, status = ? 
+      SET competition_name = ?, location = ?, competition_date = ?, status = ? 
       WHERE competition_id = ?
     `;
 
     const result = await query(sql, [competition_name, location, competition_date, status, competitionId]);
     return result;
   } catch (err) {
+    console.error("Error updating competition:", err);
     throw new Error("Gagal memperbarui data kompetisi.");
   }
 };
@@ -73,6 +78,7 @@ exports.deleteCompetition = async (competitionId) => {
     const result = await query(sql, [competitionId]);
     return result;
   } catch (err) {
+    console.error("Error deleting competition:", err);
     throw new Error("Gagal menghapus kompetisi.");
   }
 };
